@@ -81,4 +81,4 @@ If deploying to shinyapps.io, all packages used in any R script must be loaded w
 
 ---
 
-**Note:** The "Apply Filter" button will only appear when all required fields are filled and valid. This is enforced using only R code and the `shinyjs` and `shinyFeedback` packages for a robust, user-friendly experience.
+**Further development:** The "Apply Filter" button will only appear when all required fields are filled and valid. This is enforced using only R code and the `shinyjs` and `shinyFeedback` packages for a robust, user-friendly experience.
