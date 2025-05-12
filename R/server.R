@@ -9,6 +9,10 @@ app_server <- function(input, output, session) {
     comment = NULL,
     orderDate = NULL
   )
+
+  # Use a module-scoped reactiveVal to store filterValues
+  filterValues <- reactiveVal()
+
   # Show modal when button is clicked
   observeEvent(input$showModal, {
     showModal(modalDialog(
@@ -27,29 +31,35 @@ app_server <- function(input, output, session) {
       size = "l",
       easyClose = TRUE
     ))
-    # Initialize the filter module
-    filterValues <- filterModuleServer("filterMod", sample_data)
-    
-    # Reset all selections in modal
-    observeEvent(input$reset, {
-      filterValues()$reset()
-    })    
-    # Toggle Apply button visibility based on validation
-    observe({
-      values <- filterValues()
+    # Initialize the filter module only once per modal open
+    filterValues(filterModuleServer("filterMod", sample_data))
+  })
+  
+  # Reset all selections in modal
+  observeEvent(input$reset, {
+    fv <- filterValues()
+    if (!is.null(fv)) fv()$reset()
+  })
+  
+  # Toggle Apply button visibility based on validation
+  observe({
+    fv <- filterValues()
+    if (!is.null(fv)) {
+      values <- fv()
       if (isTRUE(values$valid)) {
         shinyjs::show("apply")
       } else {
         shinyjs::hide("apply")
       }
-    })
-    # Apply filters and close modal
-    observeEvent(input$apply, {
-      values <- filterValues()
-      # Only apply if valid is TRUE
+    }
+  })
+  
+  # Apply filters and close modal
+  observeEvent(input$apply, {
+    fv <- filterValues()
+    if (!is.null(fv)) {
+      values <- fv()
       if (isTRUE(values$valid)) {
-        # Apply values regardless of validation status 
-        # (client-side validation will prevent clicking if invalid)
         selected$category <- values$category
         selected$subcategory <- values$subcategory
         selected$product <- values$product
@@ -63,7 +73,7 @@ app_server <- function(input, output, session) {
         # Show notification if there are validation errors
         showNotification("Please fill in all required fields correctly before applying.", type = "error")
       }
-    })
+    }
   })
   
   # Display the selection based on applied values
