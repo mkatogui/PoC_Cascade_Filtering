@@ -280,6 +280,7 @@ jobs:
               appDir = ".",
               appName = Sys.getenv("APP_NAME"),
               appFiles = c("app.R", "R/"),  # Use only the standard files
+              forceUpdate = TRUE,  # Force update of existing app
               launch.browser = FALSE,
               logLevel = "verbose"
             )
@@ -299,6 +300,7 @@ jobs:
                 appDir = ".",
                 appName = Sys.getenv("APP_NAME"),
                 appPrimaryDoc = "app.R",
+                forceUpdate = TRUE,  # Force update of existing app
                 launch.browser = FALSE,
                 logLevel = "verbose"
               )

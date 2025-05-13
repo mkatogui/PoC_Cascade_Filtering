@@ -132,6 +132,7 @@ The CI/CD pipeline:
 - Automatically deploys to shinyapps.io when tests pass
 - Handles compiler warnings gracefully
 - Properly configures CRAN mirrors for package installation
+- Uses `forceUpdate = TRUE` to update existing applications
 
 To set up deployment, you need to configure GitHub repository secrets:
 - `SHINYAPPS_NAME`: Your shinyapps.io account name

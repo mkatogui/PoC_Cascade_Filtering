@@ -62,7 +62,7 @@ The workflow configures Git properly for the CI environment:
 
 This helps avoid Git-related issues during checkout and potential deployment steps.
 
-### 3. Warning Handling
+### 5. Warning Handling
 
 The workflow handles R compiler warnings in several ways:
 
@@ -71,7 +71,24 @@ The workflow handles R compiler warnings in several ways:
 - Using `tryCatch()` to capture and report warnings without failing the workflow
 - Setting environment variables like `R_TESTS=""` to prevent certain R test warnings
 
-### 4. Dependency Verification
+### 6. Force Update for Deployment
+
+The deployment process uses the `forceUpdate = TRUE` parameter to update existing applications:
+
+```r
+rsconnect::deployApp(
+  appDir = ".",
+  appName = Sys.getenv("APP_NAME"),
+  appFiles = c("app.R", "R/"),
+  forceUpdate = TRUE,  # Force update of existing app
+  launch.browser = FALSE,
+  logLevel = "verbose"
+)
+```
+
+This allows the workflow to update an existing app instead of failing when an app with the same name already exists.
+
+### 7. Dependency Verification
 
 After installing packages, the workflow verifies that all required packages were actually installed:
 
