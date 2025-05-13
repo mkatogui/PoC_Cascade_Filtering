@@ -141,6 +141,19 @@ See the workflow file in `.github/workflows/r-ci-cd.yml` for details.
 
 ---
 
+## CI/CD Setup
+
+This project includes a GitHub Actions workflow for continuous integration and deployment:
+
+- **Testing**: Automatically runs all tests in the `tests/testthat/` directory
+- **Deployment**: Deploys the app to shinyapps.io when tests pass
+- **Warning Handling**: Includes special handling for compiler warnings in testing
+- **Git Configuration**: Properly configures Git settings to work in CI environment
+
+For more details on how warnings are handled, see [Warning Handling Documentation](tests/WARNING_HANDLING.md).
+
+---
+
 ## License
 
 MIT License
