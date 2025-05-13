@@ -79,7 +79,8 @@ The deployment process uses the `forceUpdate = TRUE` parameter to update existin
 rsconnect::deployApp(
   appDir = ".",
   appName = Sys.getenv("APP_NAME"),
-  appFiles = c("app.R", "R/"),
+  appFiles = c("app.R", "launch.R", "R/"),  # Include the enhanced launcher
+  appPrimaryDoc = "launch.R",  # Use the enhanced launcher as primary doc
   forceUpdate = TRUE,  # Force update of existing app
   launch.browser = FALSE,
   logLevel = "verbose"
@@ -88,7 +89,18 @@ rsconnect::deployApp(
 
 This allows the workflow to update an existing app instead of failing when an app with the same name already exists.
 
-### 7. Dependency Verification
+### 7. Enhanced App Launcher
+
+The workflow uses `launch.R` as the primary document for deployment instead of the standard `app.R`. This file provides:
+
+- More robust error handling
+- Comprehensive package dependency management
+- Detailed diagnostics for troubleshooting
+- Graceful fallbacks for missing packages
+
+Using `launch.R` ensures more reliable deployments in continuous integration environments.
+
+### 8. Dependency Verification
 
 After installing packages, the workflow verifies that all required packages were actually installed:
 

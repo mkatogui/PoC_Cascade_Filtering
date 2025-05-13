@@ -20,7 +20,9 @@ A modular Shiny app demonstrating a cascading filter system with strong input va
 ```
 BasicCascadeApp/
 ├── app.R
+├── launch.R           # Enhanced app launcher for deployment
 ├── README.md
+├── shinyapps.yml      # Configuration for shinyapps.io deployment
 ├── R/
 │   ├── data.R
 │   ├── filter_module_ui.R
@@ -28,6 +30,8 @@ BasicCascadeApp/
 │   ├── server.R
 │   ├── ui.R
 │   └── validation.R
+├── docs/
+│   └── GITHUB_ACTIONS.md
 └── BasicCascadeApp.Rproj
 ```
 
