@@ -119,6 +119,28 @@ Note: Integration tests might be skipped if shinytest2 cannot find the app or if
 
 ---
 
+## Continuous Integration / Continuous Deployment
+
+This project uses GitHub Actions for CI/CD to automatically:
+
+1. **Test the app** whenever code is pushed or pull requests are made
+2. **Deploy to shinyapps.io** when changes are pushed to the main branch
+
+The CI/CD pipeline:
+- Runs all unit and integration tests
+- Validates the R package structure
+- Automatically deploys to shinyapps.io when tests pass
+
+To set up deployment, you need to configure GitHub repository secrets:
+- `SHINYAPPS_NAME`: Your shinyapps.io account name
+- `SHINYAPPS_TOKEN`: Your shinyapps.io token
+- `SHINYAPPS_SECRET`: Your shinyapps.io secret
+- `APP_NAME`: (Optional) Custom app name for deployment (defaults to 'basiccascadeapp')
+
+See the workflow file in `.github/workflows/r-ci-cd.yml` for details.
+
+---
+
 ## License
 
 MIT License
