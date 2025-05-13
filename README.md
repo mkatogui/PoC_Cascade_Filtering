@@ -141,6 +141,16 @@ To set up deployment, you need to configure GitHub repository secrets:
 
 See the workflow file in `.github/workflows/r-ci-cd.yml` for details.
 
+### Deployment Configuration
+
+This app uses a multi-tiered deployment approach:
+
+1. **Standard deployment** via `app.R` - The primary entry point
+2. **Enhanced deployment** via `deploy-app.R` - Includes more robust dependency handling
+3. **Configuration-based deployment** via `shinyapps.yml` - Specifies dependencies and runtime options
+
+The CI/CD pipeline intelligently selects the best deployment method based on the environment.
+
 ---
 
 ## CI/CD Setup

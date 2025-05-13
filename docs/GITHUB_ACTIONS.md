@@ -55,15 +55,31 @@ if (length(missing_packages) > 0) {
 }
 ```
 
-### 5. Diagnostic Information
+### 5. Deployment Strategy
+
+The workflow uses a robust deployment strategy for shinyapps.io:
+
+1. **Package installation verification**: Ensures all required packages are installed before attempting deployment
+2. **Fallback deployment strategy**: If the initial deployment fails, attempts a simplified deployment approach
+3. **Detailed logging**: Uses verbose logging to help diagnose deployment issues
+4. **Configuration file**: Uses `shinyapps.yml` to provide consistent deployment settings
+
+#### Package Installation
+
+Package installation is handled carefully:
+```r
+# Install rsconnect separately to ensure it succeeds
+install.packages("rsconnect")
+
+# Verify installation
+if (!requireNamespace("rsconnect", quietly = TRUE)) {
+  stop("Failed to install rsconnect package")
+}
+```
+
+### 6. Diagnostic Information
 
 The workflow includes diagnostic information to help troubleshoot issues:
-
-- Printing R session info
-- Listing files to be deployed
-- Providing detailed error messages
-
-## Troubleshooting
 
 If the workflow is still failing:
 

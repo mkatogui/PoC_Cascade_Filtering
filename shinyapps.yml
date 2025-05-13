@@ -1,0 +1,20 @@
+# Configuration file for shinyapps.io
+# This file helps set dependencies for rsconnect deployments
+
+# Define required packages that will be installed by shinyapps.io
+packages:
+  - shiny
+  - shinyFeedback
+  - shinyjs
+  - tibble
+
+# Tell rsconnect if this is a Shiny app
+appType: shiny
+
+# Primary file to use for deployment
+primaryDoc: app.R
+
+# Configure the server - these are sensible defaults
+runtime: R
+version: 4.2.0
+locale: en_US

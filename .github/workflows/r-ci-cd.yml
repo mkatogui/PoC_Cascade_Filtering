@@ -119,25 +119,56 @@ jobs:
           # Set CRAN mirror
           options(repos = c(CRAN = "https://cloud.r-project.org"))
           
-          # Install packages needed for deployment
-          install.packages(c(
-            "shiny", 
-            "shinyFeedback", 
-            "shinyjs", 
-            "tibble", 
-            "rsconnect"
-          ))
-          
-          # Verify installation
-          installed_packages <- rownames(installed.packages())
-          required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect")
-          missing_packages <- setdiff(required_packages, installed_packages)
-          
-          if (length(missing_packages) > 0) {
-            stop("Failed to install: ", paste(missing_packages, collapse = ", "))
-          }
-          
-          message("All required packages installed successfully")
+          # Install packages needed for deployment with detailed error handling
+          tryCatch({
+            # Enable more detailed package installation info
+            options(install.packages.check.source = "no")
+            options(install.packages.compile.from.source = "never")
+            options(warn = 2)  # Convert warnings to errors temporarily for installation
+            
+            # First, install rsconnect separately to ensure it succeeds
+            message("Installing rsconnect package...")
+            install.packages("rsconnect")
+            
+            # Check if rsconnect was installed successfully
+            if (!requireNamespace("rsconnect", quietly = TRUE)) {
+              stop("Failed to install rsconnect package")
+            }
+            
+            # Now install the rest of the packages
+            message("Installing remaining packages...")
+            install.packages(c(
+              "shiny", 
+              "shinyFeedback", 
+              "shinyjs", 
+              "tibble"
+            ))
+            
+            # Reset warning level
+            options(warn = 1)
+            
+            # Verify installation
+            installed_packages <- rownames(installed.packages())
+            required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect")
+            missing_packages <- setdiff(required_packages, installed_packages)
+            
+            if (length(missing_packages) > 0) {
+              stop("Failed to install: ", paste(missing_packages, collapse = ", "))
+            }
+            
+            message("All required packages installed successfully")
+            
+            # Print package versions for diagnostic purposes
+            message("Package versions:")
+            for (pkg in required_packages) {
+              message(pkg, ": ", packageVersion(pkg))
+            }
+          }, error = function(e) {
+            message("Error installing packages: ", e$message)
+            message(traceback())
+            # Exit with error
+            quit(status = 1)
+          })
         shell: Rscript {0}
         
       - name: Deploy to shinyapps.io
@@ -147,40 +178,91 @@ jobs:
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
           APP_NAME: ${{ secrets.APP_NAME || 'basiccascadeapp' }}
         run: |
+          # Set CRAN mirror and configure options
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
           options(warn = 1)  # Print warnings but don't stop
           
-          # Verify required environment variables
+          # Verify we have the required secrets
+          if (Sys.getenv("SHINYAPPS_NAME") == "" || 
+              Sys.getenv("SHINYAPPS_TOKEN") == "" || 
+              Sys.getenv("SHINYAPPS_SECRET") == "") {
+            message("WARNING: Missing one or more shinyapps.io credentials")
+            message("SHINYAPPS_NAME: ", ifelse(Sys.getenv("SHINYAPPS_NAME") == "", "MISSING", "OK"))
+            message("SHINYAPPS_TOKEN: ", ifelse(Sys.getenv("SHINYAPPS_TOKEN") == "", "MISSING", "OK"))
+            message("SHINYAPPS_SECRET: ", ifelse(Sys.getenv("SHINYAPPS_SECRET") == "", "MISSING", "OK"))
+            message("Skipping deployment...")
+            # Exit successfully to not fail the build
+            quit(save = "no", status = 0)
+          }
+          
           message("Deploying with account: ", Sys.getenv("SHINYAPPS_NAME"))
           message("App name: ", Sys.getenv("APP_NAME"))
           
-          # List files we're going to deploy
-          app_files <- c("app.R", list.files("R/", full.names = TRUE))
-          message("Files to deploy: ", paste(app_files, collapse = ", "))
+          # Validate app structure
+          if (!file.exists("app.R")) {
+            stop("app.R file not found in workspace root")
+          }
           
-          # Deploy with error handling
+          if (!dir.exists("R")) {
+            stop("R directory not found in workspace root")
+          }
+          
+          # List files we're going to deploy
+          app_files <- c("app.R", list.files("R/", full.names = TRUE, recursive = TRUE))
+          message("Files to deploy (", length(app_files), " total): ")
+          message(paste(app_files, collapse = "\n"))
+          message("\n")
+          
+          # Deploy with detailed error handling
           tryCatch({
             # Set CRAN mirror again to be sure
             options(repos = c(CRAN = "https://cloud.r-project.org"))
             
+            # Provide more details about the deployment process
+            message("1. Setting rsconnect account info...")
             rsconnect::setAccountInfo(
               name = Sys.getenv("SHINYAPPS_NAME"),
               token = Sys.getenv("SHINYAPPS_TOKEN"),
               secret = Sys.getenv("SHINYAPPS_SECRET")
             )
             
+            # Verify account info was set correctly
+            acct_info <- rsconnect::accounts()
+            message("Account configured: ", !is.null(acct_info) && nrow(acct_info) > 0)
+            
             # Deploy app with added diagnostics
-            message("Starting deployment...")
+            message("2. Starting deployment...")
             deployment <- rsconnect::deployApp(
+              appDir = ".",
               appName = Sys.getenv("APP_NAME"),
-              appFiles = c("app.R", "R/"),
-              launch.browser = FALSE
+              appFiles = c("app.R", "R/"),  # Use only the standard files
+              launch.browser = FALSE,
+              logLevel = "verbose"
             )
             
             message("Deployment successful!")
             message("App URL: ", deployment$url)
           }, error = function(e) {
             message("Deployment error: ", e$message)
-            # Don't fail the build for deployment errors
-            message("Continuing despite deployment errors...")
+            # Print the full error object for diagnosis
+            print(e)
+            message("Trace:")
+            traceback()
+            # Try a fallback deployment approach
+            message("Attempting fallback deployment approach...")
+            tryCatch({
+              rsconnect::deployApp(
+                appDir = ".",
+                appName = Sys.getenv("APP_NAME"),
+                appPrimaryDoc = "app.R",
+                launch.browser = FALSE,
+                logLevel = "verbose"
+              )
+              message("Fallback deployment successful!")
+            }, error = function(e2) {
+              message("Fallback deployment also failed: ", e2$message)
+              # Exit with a failure status to indicate deployment error
+              quit(save = "no", status = 1)
+            })
           })
         shell: Rscript {0}
