@@ -185,7 +185,11 @@ jobs:
               "shiny", 
               "shinyFeedback", 
               "shinyjs", 
-              "tibble"
+              "tibble",
+              "dplyr",
+              "magrittr",
+              "tidyr",
+              "readr"
             ))
             
             # Reset warning level
@@ -193,7 +197,7 @@ jobs:
             
             # Verify installation
             installed_packages <- rownames(installed.packages())
-            required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect")
+            required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect", "dplyr", "magrittr")
             missing_packages <- setdiff(required_packages, installed_packages)
             
             if (length(missing_packages) > 0) {
@@ -279,7 +283,8 @@ jobs:
             deployment <- rsconnect::deployApp(
               appDir = ".",
               appName = Sys.getenv("APP_NAME"),
-              appFiles = c("app.R", "R/"),  # Use only the standard files
+              appFiles = c("app.R", "launch.R", "R/"),  # Include the new launch.R file
+              appPrimaryDoc = "launch.R",  # Use the enhanced launcher as primary doc
               forceUpdate = TRUE,  # Force update of existing app
               launch.browser = FALSE,
               logLevel = "verbose"

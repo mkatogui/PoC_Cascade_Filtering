@@ -4,10 +4,17 @@ options(repos = c(CRAN = "https://cloud.r-project.org"))
 # Configure warning handling
 options(warn = 1)  # Print warnings but don't stop execution
 
-library(shiny)
-library(tidyverse)
-library(shinyFeedback)  # For input validation feedback
-library(shinyjs)  # Adding shinyjs for more responsive UI interactions
+# Load required packages with error handling
+required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "dplyr", "magrittr")
+
+# Try to load each package, with error handling
+for (pkg in required_packages) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    message("Installing package: ", pkg)
+    install.packages(pkg)
+  }
+  library(pkg, character.only = TRUE)
+}
 
 # Source modules and data
 source("R/validation.R")  # Source validation functions first

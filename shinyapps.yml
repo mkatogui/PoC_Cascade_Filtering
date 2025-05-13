@@ -7,6 +7,10 @@ packages:
   - shinyFeedback
   - shinyjs
   - tibble
+  - dplyr
+  - magrittr  # For the pipe operator
+  - tidyr
+  - readr
 
 # Tell rsconnect if this is a Shiny app
 appType: shiny
