@@ -1,6 +1,9 @@
 # Project-wide .Rprofile for handling compiler warnings in the BasicCascadeApp
 # This file is loaded when R starts in this project
 
+# Set CRAN mirror for package installations
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
 # Set global warning level
 options(warn = 1)  # Print warnings as they occur but don't convert to errors
 

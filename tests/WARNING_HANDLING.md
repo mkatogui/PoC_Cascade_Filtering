@@ -36,6 +36,17 @@ The GitHub Actions workflow `.github/workflows/r-ci-cd.yml` is configured to:
 - Suppress package loading warnings
 - Use tryCatch to handle warnings without failing the pipeline
 - Carefully handle diagnostic outputs for better troubleshooting
+- Set CRAN mirrors to ensure package installations work in CI
+
+### CRAN Mirror Configuration
+
+When running R scripts in CI environments, it's essential to set a CRAN mirror explicitly:
+
+```r
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+```
+
+This ensures that package installations work correctly, even in automated environments where default mirrors might not be configured.
 
 ### Handling Pipeline Failures
 
@@ -52,15 +63,38 @@ When writing new tests, you can use the following pattern:
 
 ```r
 test_that("My test description", {
+  # Set CRAN mirror
+  options(repos = c(CRAN = "https://cloud.r-project.org"))
+  
   # Load packages with warning suppression
   suppressWarnings({
     library(shiny)
+    library(shinyFeedback)
     # other packages...
   })
   
   # Your test code here
   expect_true(TRUE)
 })
+```
+
+## Handling Tidyverse and Other Complex Package Dependencies
+
+If your app uses tidyverse packages, which often generate many compiler warnings, consider:
+
+1. Loading tidyverse packages individually rather than the entire tidyverse
+2. Using explicit suppression for tidyverse warnings
+3. Using `withr::with_options()` to temporarily change warning behavior during loading:
+
+```r
+withr::with_options(
+  list(warn = -1),  # Suppress all warnings
+  {
+    library(dplyr)
+    library(tidyr)
+    library(ggplot2)
+  }
+)
 ```
 
 ## Modifying Warning Handling

@@ -1,3 +1,9 @@
+# Set CRAN mirror for package installations
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# Configure warning handling
+options(warn = 1)  # Print warnings but don't stop execution
+
 library(shiny)
 library(tidyverse)
 library(shinyFeedback)  # For input validation feedback

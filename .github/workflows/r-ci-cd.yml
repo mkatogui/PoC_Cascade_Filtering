@@ -29,7 +29,30 @@ jobs:
           
       - name: Install dependencies
         run: |
-          install.packages(c("testthat", "shiny", "shinyFeedback", "shinyjs", "tibble"))
+          # Set CRAN mirror
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
+          
+          # Install packages needed for testing
+          install.packages(c(
+            "testthat", 
+            "shiny", 
+            "shinyFeedback", 
+            "shinyjs", 
+            "tibble",
+            "withr",
+            "shinytest2"
+          ))
+          
+          # Verify installation
+          installed_packages <- rownames(installed.packages())
+          required_packages <- c("testthat", "shiny", "shinyFeedback", "shinyjs", "tibble", "withr")
+          missing_packages <- setdiff(required_packages, installed_packages)
+          
+          if (length(missing_packages) > 0) {
+            stop("Failed to install: ", paste(missing_packages, collapse = ", "))
+          }
+          
+          message("All required packages installed successfully")
         shell: Rscript {0}
       
       - name: Run tests
@@ -38,6 +61,9 @@ jobs:
           options(warn = 1)
           Sys.setenv("R_TESTS" = "")
           Sys.setenv("_R_CHECK_FORCE_SUGGESTS_" = "false")
+          
+          # Set CRAN mirror
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
           
           # Print diagnostic information
           message("R Session Info:")
@@ -90,7 +116,28 @@ jobs:
           
       - name: Install dependencies
         run: |
-          install.packages(c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect"))
+          # Set CRAN mirror
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
+          
+          # Install packages needed for deployment
+          install.packages(c(
+            "shiny", 
+            "shinyFeedback", 
+            "shinyjs", 
+            "tibble", 
+            "rsconnect"
+          ))
+          
+          # Verify installation
+          installed_packages <- rownames(installed.packages())
+          required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect")
+          missing_packages <- setdiff(required_packages, installed_packages)
+          
+          if (length(missing_packages) > 0) {
+            stop("Failed to install: ", paste(missing_packages, collapse = ", "))
+          }
+          
+          message("All required packages installed successfully")
         shell: Rscript {0}
         
       - name: Deploy to shinyapps.io
@@ -112,6 +159,9 @@ jobs:
           
           # Deploy with error handling
           tryCatch({
+            # Set CRAN mirror again to be sure
+            options(repos = c(CRAN = "https://cloud.r-project.org"))
+            
             rsconnect::setAccountInfo(
               name = Sys.getenv("SHINYAPPS_NAME"),
               token = Sys.getenv("SHINYAPPS_TOKEN"),

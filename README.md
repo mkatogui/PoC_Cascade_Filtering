@@ -130,6 +130,8 @@ The CI/CD pipeline:
 - Runs all unit and integration tests
 - Validates the R package structure
 - Automatically deploys to shinyapps.io when tests pass
+- Handles compiler warnings gracefully
+- Properly configures CRAN mirrors for package installation
 
 To set up deployment, you need to configure GitHub repository secrets:
 - `SHINYAPPS_NAME`: Your shinyapps.io account name
@@ -149,8 +151,11 @@ This project includes a GitHub Actions workflow for continuous integration and d
 - **Deployment**: Deploys the app to shinyapps.io when tests pass
 - **Warning Handling**: Includes special handling for compiler warnings in testing
 - **Git Configuration**: Properly configures Git settings to work in CI environment
+- **CRAN Mirror**: Ensures package installation works properly in CI
 
 For more details on how warnings are handled, see [Warning Handling Documentation](tests/WARNING_HANDLING.md).
+
+For detailed information on the GitHub Actions workflow configuration, see [GitHub Actions Documentation](docs/GITHUB_ACTIONS.md).
 
 ---
 

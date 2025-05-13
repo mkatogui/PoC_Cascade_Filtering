@@ -1,6 +1,9 @@
 # Setup test environment options to handle compiler warnings
 # This will be run before tests to set appropriate options
 
+# Set CRAN mirror for package installations
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
 options(warn = 1)  # Print warnings as they occur but don't convert to errors
 
 # Suppress specific types of warnings that might come from dependencies
