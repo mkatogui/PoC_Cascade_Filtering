@@ -18,7 +18,37 @@ options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 This prevents the "trying to use CRAN without setting a mirror" error that commonly occurs in CI environments.
 
-### 2. Git Configuration
+### 2. System Dependencies
+
+The workflow installs necessary system dependencies for building R packages with C/C++ code:
+
+```yaml
+- name: Install system dependencies
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends \
+      libcurl4-openssl-dev \
+      libssl-dev \
+      libxml2-dev 
+      # other dependencies...
+```
+
+This ensures packages like `curl` can be built from source when necessary.
+
+### 3. Package Caching
+
+To speed up builds, the workflow caches R packages:
+
+```yaml
+- name: Cache R packages
+  uses: actions/cache@v3
+  with:
+    path: ${{ env.R_LIBS_USER }}
+    key: ${{ runner.os }}-r-${{ hashFiles('**/DESCRIPTION') }}
+    restore-keys: ${{ runner.os }}-r-
+```
+
+### 4. Git Configuration
 
 The workflow configures Git properly for the CI environment:
 
