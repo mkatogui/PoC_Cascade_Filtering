@@ -89,6 +89,36 @@ BasicCascadeApp/
 
 ---
 
+## Testing
+
+This project includes both unit tests and integration tests:
+
+1. **Unit Tests**: Testing validation functions 
+2. **Integration Tests**: Testing the app's UI interactions
+
+### Running Tests
+
+1. **Install test dependencies:**
+
+    ```r
+    install.packages(c("testthat", "shinytest2"))
+    ```
+
+2. **Run all tests:**
+
+    From the project root directory, run:
+
+    ```r
+    testthat::test_dir("tests/testthat")
+    ```
+
+Note: Integration tests might be skipped if shinytest2 cannot find the app or if running in a non-interactive environment.
+
+- Unit tests for validation logic are in `tests/testthat/test-validation.R`.
+- Integration tests for the Shiny app are in `tests/testthat/test-integration.R`.
+
+---
+
 ## License
 
 MIT License
