@@ -1,6 +1,7 @@
 # BasicCascadeApp
 
-A modular Shiny app demonstrating a cascading filter system with strong input validation and a modal interface.
+A modular Shiny app demonstrating a cascading filter system with strong input validation and a modal interface. 
+R CI/CD pipeline as a working template.
 
 ---
 
