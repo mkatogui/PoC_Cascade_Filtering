@@ -13,10 +13,10 @@ COMMENT_REQUIRED <- TRUE
 
 # UI Display strings
 ORDER_DATE_RULE_TEXT <- sprintf(
-  "Must be between %s and %s", 
-  format(MIN_ORDER_DATE, "%Y-%m-%d"), 
+  "Must be between %s and %s",
+  format(MIN_ORDER_DATE, "%Y-%m-%d"),
   format(MAX_ORDER_DATE, "%Y-%m-%d")
 )
 
 QUANTITY_LABEL <- "Quantity (positive integer)"
-COMMENT_LABEL  <- sprintf("Comment (%d-%d characters)", COMMENT_MIN_LENGTH, COMMENT_MAX_LENGTH)
+COMMENT_LABEL <- sprintf("Comment (%d-%d characters)", COMMENT_MIN_LENGTH, COMMENT_MAX_LENGTH)

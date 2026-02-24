@@ -3,6 +3,7 @@ app_ui <- function() {
   fluidPage(
     # Use custom CSS
     tags$head(
+      shinyjs::useShinyjs(),
       tags$style(HTML("
         .app-header {
           background-color: #f5f5f5;
@@ -26,15 +27,15 @@ app_ui <- function() {
         }
       "))
     ),
-    
+
     titlePanel("Cascade Filter with Validation"),
-    
+
     # Main content
     fluidRow(
       column(
         width = 10,
         offset = 1,
-        
+
         # Header section
         div(
           class = "app-header",
@@ -43,9 +44,10 @@ app_ui <- function() {
           actionButton("showModal", "Open Filter", class = "btn-primary btn-lg"),
           hr()
         ),
-        
+
         # Info box with validation rules
-        div(class = "info-box",
+        div(
+          class = "info-box",
           h4("Input Validation Rules:"),
           tags$ul(
             tags$li(strong("Quantity:"), QUANTITY_LABEL),
@@ -53,9 +55,10 @@ app_ui <- function() {
             tags$li(strong("Order Date:"), ORDER_DATE_RULE_TEXT)
           )
         ),
-        
+
         # Selection display
-        div(class = "selection-display",
+        div(
+          class = "selection-display",
           h4("Current Selection:"),
           verbatimTextOutput("selection")
         )
