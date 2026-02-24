@@ -40,13 +40,15 @@ BasicCascadeApp/
 
 ## How to Run
 
-1. **Install dependencies** (if needed):
+1. **Initialize Environment**:
+    This project uses `renv` for dependency management. To restore the exact production environment:
 
     ```r
-    install.packages(c("shiny", "shinyFeedback", "shinyjs", "tibble"))
+    if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+    renv::restore()
     ```
 
-2. **Run the app**:
+2. **Run the App**:
 
     Open `app.R` in RStudio or VS Code and click "Run App", or run in R console:
 
@@ -103,13 +105,13 @@ This project includes both unit tests and integration tests:
 
 ### Running Tests
 
-1. **Install test dependencies:**
+1. **Restore dependencies** (if not already done):
 
     ```r
-    install.packages(c("testthat", "shinytest2"))
+    renv::restore()
     ```
 
-2. **Run all tests:**
+2. **Run all tests**:
 
     From the project root directory, run:
 
@@ -172,6 +174,18 @@ This project includes a GitHub Actions workflow for continuous integration and d
 For more details on how warnings are handled, see [Warning Handling Documentation](tests/WARNING_HANDLING.md).
 
 For detailed information on the GitHub Actions workflow configuration, see [GitHub Actions Documentation](docs/GITHUB_ACTIONS.md).
+
+---
+
+## Production Readiness
+
+This project is engineered for production, adhering to the principles of modularity, automated testing, and reproducible environments:
+
+- **Modular Architecture**: Functional logic is separated into `R/validation.R` and Shiny modules (`filter_module_*.R`).
+- **Reproducible Environment**: Uses `renv` to pin all R package versions, ensuring consistency across development and production.
+- **Automated Verification**: Comprehensive test suite (unit and integration) integrated into a CI/CD pipeline.
+- **CI/CD Excellence**: GitHub Actions pipeline automatically tests and deploys to `shinyapps.io` only when all checks pass.
+- **Dependency Control**: `renv.lock` ensures that "it works on my machine" translates to "it works in production".
 
 ---
 
