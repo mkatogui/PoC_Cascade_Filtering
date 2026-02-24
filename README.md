@@ -12,7 +12,16 @@ R CI/CD pipeline as a working template.
 - **Validation:** Real-time, with field-level feedback using `shinyFeedback`.
 - **Apply Button:** Only visible when all fields are valid.
 - **Reset Button:** Resets all modal fields.
+- **Observability:** Structured logging of key events (validation, state changes) to `stderr` for production audit.
+- **Versioning:** Automated semantic versioning and GitHub releases via tagging workflows.
 - **Selections:** Displayed in the main UI with validation status.
+
+---
+
+## Meta
+
+- **Topics:** `shiny`, `r`, `production-ready`, `cie-cd`, `docker`, `renv`, `validation`, `modular-design`
+- **Case Study:** [Production-Grade Shiny Engineering](docs/PRODUCTION_CASE_STUDY.md)
 
 ---
 
@@ -139,6 +148,8 @@ The CI/CD pipeline:
 - **Production-Strict**: Builds only deploy if 100% of tests pass.
 - **Reliable Mirroring**: Uses Posit Package Manager binary mirrors for stable and fast package restores.
 - **Emoji-Free Output**: All logs and summaries are forced to plain text for professional compatibility.
+- **Structured Logging**: Built-in observability layer (`R/logger.R`) for production auditing of application events.
+- **Semantic Release**: Automatic versioned tagging (`v*.*.*`) on every successful merge to the main branch.
 
 To set up deployment, you need to configure GitHub repository secrets:
 - `SHINYAPPS_NAME`: Your shinyapps.io account name

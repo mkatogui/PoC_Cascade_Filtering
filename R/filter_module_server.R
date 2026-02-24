@@ -1,6 +1,8 @@
 # Filter Module Server function
 filterModuleServer <- function(id, data) {
   moduleServer(id, function(input, output, session) {
+    log_info("MODULE_INIT", "Filter module initialized", module_id = id)
+    
     observe({
       updateSelectInput(session, "category", 
                        choices = c("Select..." = "", unique(data$Category)))
@@ -33,6 +35,7 @@ filterModuleServer <- function(id, data) {
       }
     })
     resetSelections <- function() {
+      log_info("FILTER_RESET", "Modal fields reset to defaults")
       updateSelectInput(session, "category", selected = "")
       updateSelectInput(session, "subcategory", choices = c("Select..." = ""))
       updateSelectInput(session, "product", choices = c("Select..." = ""))
@@ -84,6 +87,18 @@ filterModuleServer <- function(id, data) {
     })
     return(reactive({
       valid <- all_fields_valid(input)
+      
+      # Log validation state transitions
+      isolate({
+        if (is.null(session$userData$last_valid) || session$userData$last_valid != valid) {
+          log_info("VALIDATION_CHANGE", "Validation state changed", 
+                  is_valid = valid,
+                  category = input$category,
+                  quantity = input$quantity)
+          session$userData$last_valid <- valid
+        }
+      })
+      
       list(
         category = input$category,
         subcategory = input$subcategory,

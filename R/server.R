@@ -1,5 +1,7 @@
 # Define server logic
 app_server <- function(input, output, session) {
+    log_info("APP_START", "Main app server logic started")
+    
     # Store selected values
   selected <- reactiveValues(
     category = NULL,
@@ -15,6 +17,7 @@ app_server <- function(input, output, session) {
 
   # Show modal when button is clicked
   observeEvent(input$showModal, {
+    log_info("MODAL_OPEN", "User clicked Open Filter button")
     showModal(modalDialog(
       title = "Filter Options",
       
@@ -56,6 +59,7 @@ app_server <- function(input, output, session) {
   
   # Apply filters and close modal
   observeEvent(input$apply, {
+    log_info("FILTER_APPLY_CLICK", "User clicked Apply Filter button")
     fv <- filterValues()
     if (!is.null(fv)) {
       values <- fv()
@@ -67,6 +71,12 @@ app_server <- function(input, output, session) {
         selected$comment <- values$comment
         selected$orderDate <- values$orderDate
         
+        log_info("FILTER_SUCCESS", "Filters applied successfully",
+                 category = values$category,
+                 subcategory = values$subcategory,
+                 product = values$product,
+                 quantity = values$quantity)
+                 
         # Close the modal
         removeModal()
       } else {

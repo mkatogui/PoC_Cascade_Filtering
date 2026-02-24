@@ -17,7 +17,8 @@ for (pkg in required_packages) {
 }
 
 # Source modules and data
-source("R/validation.R")  # Source validation functions first
+source("R/logger.R")      # Source logger first
+source("R/validation.R")  # Source validation functions
 source("R/filter_module_ui.R")
 source("R/filter_module_server.R")
 source("R/data.R")
