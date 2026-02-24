@@ -1,153 +1,54 @@
 # GitHub Actions Workflow Documentation
 
-This document explains the key components of the CI/CD workflow configuration in `.github/workflows/r-ci-cd.yml`.
+This document explains the high-performance CI/CD workflow configuration in `.github/workflows/r-ci-cd.yml`.
 
 ## Overview
 
-The GitHub Actions workflow automates testing and deployment of the BasicCascadeApp to shinyapps.io. It's designed to handle common issues like compiler warnings and package installation problems in CI environments.
+The CI/CD pipeline is designed for speed, reproducibility, and high visibility. It uses a container-based strategy with Docker and GitHub Container Registry (GHCR) to ensure the exact same R environment is used for testing and deployment.
 
-## Key Features
+## Architecture
 
-### 1. CRAN Mirror Configuration
+The workflow consists of three main stages:
 
-All R script executions explicitly set a CRAN mirror to ensure reliable package installation:
+### 1. Build Image (Environment Recycling)
 
-```r
-options(repos = c(CRAN = "https://cloud.r-project.org"))
-```
+Instead of installing R packages from scratch on every run, we use a "Build-on-Change" strategy:
 
-This prevents the "trying to use CRAN without setting a mirror" error that commonly occurs in CI environments.
+- **Hashing**: A unique SHA-256 hash is generated from `renv.lock` and `Dockerfile`.
+- **Registry Check**: The workflow checks if a Docker image with this hash already exists in GHCR.
+- **Recycling**: If the image exists, the build is skipped, saving ~5-10 minutes.
+- **Binary Mirror**: We use the Posit Package Manager binary mirror for Ubuntu Noble to ensure package installations are nearly instantaneous.
 
-### 2. System Dependencies
+### 2. Testing (Multi-Tier)
 
-The workflow installs necessary system dependencies for building R packages with C/C++ code:
+All tests are executed inside the Docker container to guarantee environment parity:
 
-```yaml
-- name: Install system dependencies
-  run: |
-    sudo apt-get update
-    sudo apt-get install -y --no-install-recommends \
-      libcurl4-openssl-dev \
-      libssl-dev \
-      libxml2-dev 
-      # other dependencies...
-```
+- **Unit Tests**: Verifies core validation logic in `R/validation.R`.
+- **Integration Tests**: Uses `shinytest2` to simulate a browser session. It navigates the cascading dropdowns and verifies that the UI state correctly updates.
+- **Headless Mode**: Integration tests run in a headless Chromium browser pre-installed in the Docker image.
 
-This ensures packages like `curl` can be built from source when necessary.
+### 3. Deployment
 
-### 3. Package Caching
+Automated deployment to shinyapps.io occurs only when all tests pass:
 
-To speed up builds, the workflow caches R packages:
+- **Consistency**: The deployment job runs in the same container as the tests.
+- **Credentials**: Uses GitHub Repository Secrets (`SHINYAPPS_NAME`, `SHINYAPPS_TOKEN`, `SHINYAPPS_SECRET`).
+- **Safety**: Includes a fallback mechanism to construct the app URL if the standard API return is missing it.
 
-```yaml
-- name: Cache R packages
-  uses: actions/cache@v3
-  with:
-    path: ${{ env.R_LIBS_USER }}
-    key: ${{ runner.os }}-r-${{ hashFiles('**/DESCRIPTION') }}
-    restore-keys: ${{ runner.os }}-r-
-```
+## Key Environment Variables
 
-### 4. Git Configuration
+- `R_CLI_UNICODE`: Set to `false` to ensure logs are professional and emoji-free.
+- `RENV_CONFIG_ACTIVATE`: Set to `FALSE` in CI to prevent `renv` from auto-loading, as the container already has the correct system library.
+- `R_LIBS_SITE`: Pointed to `/usr/local/lib/R/site-library` for global visibility.
 
-The workflow configures Git properly for the CI environment:
+## Observability
 
-```yaml
-- name: Set up Git configuration
-  run: |
-    git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    git config --global user.email "actions@github.com"
-    git config --global user.name "GitHub Actions"
-```
+The pipeline provides high-visibility feedback via **GitHub Job Summaries**:
+- **Test Results**: A Markdown table showing passes/failures and details on any errors.
+- **Deployment Status**: A summary including the live URL and recycling status.
 
-This helps avoid Git-related issues during checkout and potential deployment steps.
+## Troubleshooting
 
-### 5. Warning Handling
-
-The workflow handles R compiler warnings in several ways:
-
-- Setting `options(warn = 1)` to print warnings without stopping execution
-- Using `suppressWarnings()` around package loading
-- Using `tryCatch()` to capture and report warnings without failing the workflow
-- Setting environment variables like `R_TESTS=""` to prevent certain R test warnings
-
-### 6. Force Update for Deployment
-
-The deployment process uses the `forceUpdate = TRUE` parameter to update existing applications:
-
-```r
-rsconnect::deployApp(
-  appDir = ".",
-  appName = Sys.getenv("APP_NAME"),
-  appFiles = c("app.R", "launch.R", "R/"),  # Include the enhanced launcher
-  appPrimaryDoc = "launch.R",  # Use the enhanced launcher as primary doc
-  forceUpdate = TRUE,  # Force update of existing app
-  launch.browser = FALSE,
-  logLevel = "verbose"
-)
-```
-
-This allows the workflow to update an existing app instead of failing when an app with the same name already exists.
-
-### 7. Enhanced App Launcher
-
-The workflow uses `launch.R` as the primary document for deployment instead of the standard `app.R`. This file provides:
-
-- More robust error handling
-- Comprehensive package dependency management
-- Detailed diagnostics for troubleshooting
-- Graceful fallbacks for missing packages
-
-Using `launch.R` ensures more reliable deployments in continuous integration environments.
-
-### 8. Dependency Verification
-
-After installing packages, the workflow verifies that all required packages were actually installed:
-
-```r
-installed_packages <- rownames(installed.packages())
-required_packages <- c("testthat", "shiny", "shinyFeedback", "shinyjs", "tibble")
-missing_packages <- setdiff(required_packages, installed_packages)
-
-if (length(missing_packages) > 0) {
-  stop("Failed to install: ", paste(missing_packages, collapse = ", "))
-}
-```
-
-### 5. Deployment Strategy
-
-The workflow uses a robust deployment strategy for shinyapps.io:
-
-1. **Package installation verification**: Ensures all required packages are installed before attempting deployment
-2. **Fallback deployment strategy**: If the initial deployment fails, attempts a simplified deployment approach
-3. **Detailed logging**: Uses verbose logging to help diagnose deployment issues
-4. **Configuration file**: Uses `shinyapps.yml` to provide consistent deployment settings
-
-#### Package Installation
-
-Package installation is handled carefully:
-```r
-# Install rsconnect separately to ensure it succeeds
-install.packages("rsconnect")
-
-# Verify installation
-if (!requireNamespace("rsconnect", quietly = TRUE)) {
-  stop("Failed to install rsconnect package")
-}
-```
-
-### 6. Diagnostic Information
-
-The workflow includes diagnostic information to help troubleshoot issues:
-
-If the workflow is still failing:
-
-1. Check if all required packages are being installed
-2. Ensure proper CRAN mirror configuration
-3. Look for R error messages in the workflow logs
-4. Verify that the deployed app files include all necessary dependencies
-
-## References
-
-- [GitHub Actions for R](https://github.com/r-lib/actions)
-- [rsconnect Package Documentation](https://rstudio.github.io/rsconnect/)
+1. **Build Failure**: Check if a package has been removed from the CRAN archive; the Dockerfile is configured to prioritize the binary mirror to mitigate this.
+2. **Integration Test Failure**: These tests can be sensitive to timeouts; the timeout is set to 20s to ensure stability.
+3. **Missing Emojis**: This is intentional. The project enforces a strictly plain-text output for professional logs.

@@ -100,8 +100,8 @@ BasicCascadeApp/
 
 This project includes both unit tests and integration tests:
 
-1. **Unit Tests**: Testing validation functions 
-2. **Integration Tests**: Testing the app's UI interactions
+1. **Unit Tests**: Verifying validation logic in `R/validation.R` for core business rules (quantity, date ranges, comment length).
+2. **Integration Tests**: Full end-to-end browser simulation using `shinytest2`. This validates the cascading dropdown logic ("Electronics" -> "Phones") and ensures that validation state transitions (like the Apply button visibility) work correctly across the entire session.
 
 ### Running Tests
 
@@ -134,12 +134,11 @@ This project uses GitHub Actions for CI/CD to automatically:
 2. **Deploy to shinyapps.io** when changes are pushed to the main branch
 
 The CI/CD pipeline:
-- Runs all unit and integration tests
-- Validates the R package structure
-- Automatically deploys to shinyapps.io when tests pass
-- Handles compiler warnings gracefully
-- Properly configures CRAN mirrors for package installation
-- Uses `forceUpdate = TRUE` to update existing applications
+- **Intelligent Image Recycling**: Uses content-based hashing of `renv.lock` and `Dockerfile` to reuse existing images in GHCR. This speeds up builds significantly when dependencies haven't changed.
+- **Automated Verification**: Runs both unit and integration tests in a headless container environment.
+- **Production-Strict**: Builds only deploy if 100% of tests pass.
+- **Reliable Mirroring**: Uses Posit Package Manager binary mirrors for stable and fast package restores.
+- **Emoji-Free Output**: All logs and summaries are forced to plain text for professional compatibility.
 
 To set up deployment, you need to configure GitHub repository secrets:
 - `SHINYAPPS_NAME`: Your shinyapps.io account name

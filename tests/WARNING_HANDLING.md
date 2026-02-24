@@ -1,112 +1,53 @@
-# Handling Compiler Warnings in Shiny Tests
+# Handling Warnings in Production R Environments
 
-This document explains the approach used in this project to handle compiler warnings that may appear during testing, especially those related to Sass compilation in Shiny packages.
+This document explains the modern approach used in this project to handle warnings and ensure clean, actionable logs in CI/CD environments.
 
 ## Background
 
-When testing Shiny applications, you may encounter compiler warnings related to:
-- C++ code compilation in package dependencies
-- Sass compilation in Shiny and related packages
-- Deprecated functions or features
+R environments, especially during package loading and complex computations (like CSS/Sass compilation), can generate numerous warnings. In a production pipeline, these warnings can clutter logs and obscure real errors.
 
-These warnings are generally not issues with your code but rather with dependencies or the R environment. However, they can make test output harder to read and may cause CI pipelines to fail if warnings are treated as errors.
+## Solution Architecture
 
-## Solution Components
+### 1. Global Suppression Layer (.Rprofile)
 
-### 1. Project-wide Settings (.Rprofile)
+The project uses a specialized `.Rprofile` that is automatically loaded in both development and CI/CD:
 
-The `.Rprofile` file in the project root contains settings that apply to all R sessions in this project:
+- **Warn Level**: Set to `options(warn = 1)` to print warnings immediately without stopping the build.
+- **Unicode Control**: Emojis and Unicode icons are disabled via `options(cli.unicode = FALSE)` to ensure logs are compatible with all terminal formats.
+- **Namespace Silencing**: Common Shiny and Tidyverse loading messages are suppressed using `suppressPackageWarnings()`.
 
-```r
-options(warn = 1)  # Print warnings as they occur but don't convert to errors
+### 2. Containerized Reliability
+
+By using a Docker-based pipeline with a pre-synced `renv.lock`, we eliminate most environment-related warnings:
+
+- **Pinned Versions**: Every package version is locked, preventing warnings from "bleeding edge" updates.
+- **Binary Stability**: Forcing the use of the Posit binary mirror for Ubuntu Noble ensures that we aren't compiling from source, which is where most C++ compiler warnings originate.
+
+### 3. CI/CD Environment Control
+
+In the GitHub Actions workflow, we enforce a plain-text standard by setting:
+
+```yaml
+env:
+  R_CLI_UNICODE: "false"
+  CLI_UNICODE: "false"
+  LANG: "C"
 ```
 
-This ensures warnings are printed but don't abort execution.
+This ensures that even internal R packages like `rsconnect` or `cli` use standard text (e.g., [PASS]) instead of Unicode symbols.
 
-### 2. Helper Functions for Tests
+## Best Practices for Tests
 
-The `tests/testthat/helper-warnings.R` file contains functions to:
-- Suppress warnings during package loading
-- Provide custom test reporters that filter specific warnings
+When writing new tests in `tests/testthat/`:
 
-### 3. CI/CD Configuration
+1.  **Avoid Emojis**: Do not use non-ASCII characters in `expect_match` or print statements.
+2.  **Graceful Degrades**: Use `skip_if_not_installed()` for heavy dependencies like `shinytest2` to ensure the test suite runs even in partial environments.
+3.  **Headless Configuration**: Always use headless browser modes for UI tests to avoid X11/server-side display warnings.
 
-The GitHub Actions workflow `.github/workflows/r-ci-cd.yml` is configured to:
-- Set the appropriate warning level
-- Suppress package loading warnings
-- Use tryCatch to handle warnings without failing the pipeline
-- Carefully handle diagnostic outputs for better troubleshooting
-- Set CRAN mirrors to ensure package installations work in CI
+## Troubleshooting Failures
 
-### CRAN Mirror Configuration
+If a pipeline fails due to a warning-turned-error:
 
-When running R scripts in CI environments, it's essential to set a CRAN mirror explicitly:
-
-```r
-options(repos = c(CRAN = "https://cloud.r-project.org"))
-```
-
-This ensures that package installations work correctly, even in automated environments where default mirrors might not be configured.
-
-### Handling Pipeline Failures
-
-If tests are still failing in CI despite these measures:
-
-1. Check the GitHub Actions logs for specific error messages
-2. Look for warning messages that might be upgraded to errors in the CI environment
-3. Consider adding specific warning suppressions for problematic packages
-4. Ensure all dependencies are properly installed in the CI environment
-
-## Using This Approach in Your Tests
-
-When writing new tests, you can use the following pattern:
-
-```r
-test_that("My test description", {
-  # Set CRAN mirror
-  options(repos = c(CRAN = "https://cloud.r-project.org"))
-  
-  # Load packages with warning suppression
-  suppressWarnings({
-    library(shiny)
-    library(shinyFeedback)
-    # other packages...
-  })
-  
-  # Your test code here
-  expect_true(TRUE)
-})
-```
-
-## Handling Tidyverse and Other Complex Package Dependencies
-
-If your app uses tidyverse packages, which often generate many compiler warnings, consider:
-
-1. Loading tidyverse packages individually rather than the entire tidyverse
-2. Using explicit suppression for tidyverse warnings
-3. Using `withr::with_options()` to temporarily change warning behavior during loading:
-
-```r
-withr::with_options(
-  list(warn = -1),  # Suppress all warnings
-  {
-    library(dplyr)
-    library(tidyr)
-    library(ggplot2)
-  }
-)
-```
-
-## Modifying Warning Handling
-
-If you need to adjust how warnings are handled:
-
-1. Edit `tests/testthat/helper-warnings.R` to add or modify suppression logic
-2. Update `.Rprofile` for project-wide settings
-3. Modify `.github/workflows/r-ci-cd.yml` for CI/CD-specific settings
-
-## References
-
-- [testthat Documentation](https://testthat.r-lib.org/)
-- [R Warning Handling](https://stat.ethz.ch/R-manual/R-devel/library/base/html/warning.html)
-- [GitHub Actions for R](https://github.com/r-lib/actions)
+- Check the **Job Summary** table for the specific test file that failed.
+- Look for the `Execution halted` message in the logs; the standard text indicator (e.g., FAILED) will point to the exact issue.
+- Verify that your local `renv` is synced with `renv.lock` via `renv::status()`.

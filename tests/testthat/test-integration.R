@@ -62,5 +62,5 @@ test_that("Full cascading filter flow works correctly", {
   expect_match(final_text, "Product : iPhone")
   expect_match(final_text, "Quantity : 5")
   expect_match(final_text, "Comment : Validation passes here")
-  expect_match(final_text, "✓ Valid", all = FALSE) # Check that some validation marks appear
+  expect_match(final_text, "Valid", all = FALSE) # Check that some validation marks appear
 })

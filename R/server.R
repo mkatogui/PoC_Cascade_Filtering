@@ -107,7 +107,7 @@ app_server <- function(input, output, session) {
       # Validate quantity
       if(!is.null(selected$quantity)) {
         qty_valid <- selected$quantity > 0
-        cat("Quantity: ", ifelse(qty_valid, "✓ Valid", "✗ Invalid"), "\n")
+        cat("Quantity: ", ifelse(qty_valid, "Valid", "Invalid"), "\n")
       }
       
       # Validate comment
@@ -117,7 +117,7 @@ app_server <- function(input, output, session) {
         comment_valid <- if(comment_empty) TRUE else (comment_length >= 10 && comment_length <= 20)
         cat("Comment: ", 
             ifelse(comment_empty, "Not provided", 
-                   ifelse(comment_valid, "✓ Valid", "✗ Invalid")), 
+                   ifelse(comment_valid, "Valid", "Invalid")), 
             "\n")
       }
       
@@ -126,7 +126,7 @@ app_server <- function(input, output, session) {
         date_valid <- !is.na(selected$orderDate) && 
                      selected$orderDate >= as.Date("2023-01-01") && 
                      selected$orderDate <= as.Date("2024-12-31")
-        cat("Date: ", ifelse(date_valid, "✓ Valid", "✗ Invalid"), "\n")
+        cat("Date: ", ifelse(date_valid, "Valid", "Invalid"), "\n")
       }
     }
   })
