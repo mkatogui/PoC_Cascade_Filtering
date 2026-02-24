@@ -4,7 +4,9 @@ app_ui <- function() {
     # Use custom CSS
     tags$head(
       shinyjs::useShinyjs(),
-      tags$style(HTML("
+      tags$style(
+        HTML(
+          "
         .app-header {
           background-color: #f5f5f5;
           padding: 20px;
@@ -25,7 +27,9 @@ app_ui <- function() {
           margin-top: 20px;
           border: 1px solid #ddd;
         }
-      "))
+      "
+        )
+      )
     ),
 
     titlePanel("Cascade Filter with Validation"),

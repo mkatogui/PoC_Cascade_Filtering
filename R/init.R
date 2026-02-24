@@ -1,11 +1,15 @@
 # Initialization script for PoC Cascade Filtering App
 # Sources all components in correct order
 
-# 1. Configuration & Constants
+# 1. Logging FIRST (Point 6, 16)
+# Ensure logger is available before any other component sources
+source("R/logger.R")
+
+# 2. Configuration & Constants
 source("R/config.R")
 source("R/constants.R")
 
-# 2. Load Core Dependencies (Point 6, 26)
+# 3. Load Core Dependencies
 # Explicit library() calls are required for renv to detect usage
 library(shiny)
 library(shinyjs)
@@ -15,12 +19,11 @@ library(tibble)
 library(jsonlite)
 library(digest)
 
-# 3. Logging & Utilities
-source("R/logger.R")
+# 4. Utilities & Logic
 source("R/validation.R")
-
-# 4. Data & Core Logic
 source("R/data.R")
+
+# 5. UI & Server
 source("R/filter_module_ui.R")
 source("R/filter_module_server.R")
 source("R/ui.R")
