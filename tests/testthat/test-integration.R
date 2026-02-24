@@ -41,7 +41,7 @@ test_that("Full cascading filter flow works correctly", {
   
   # 3. Fill validation fields
   app$set_inputs(`filterMod-quantity` = 5)
-  app$set_inputs(`filterMod-comment` = "Validation passes here") # > 10 chars
+  app$set_inputs(`filterMod-comment` = "Valid comment") # 13 chars (10-20 allowed)
   
   # 4. Verify that Apply button is VISIBLE but DISABLED (as validation should initially fail)
   is_apply_visible <- app$get_js("$('#apply').css('display') !== 'none'")
@@ -51,7 +51,7 @@ test_that("Full cascading filter flow works correctly", {
   
   # 5. Fill validation fields to enable Apply
   app$set_inputs(`filterMod-quantity` = 5)
-  app$set_inputs(`filterMod-comment` = "Validation passes here") # Length 22
+  app$set_inputs(`filterMod-comment` = "Valid comment") # 13 chars
   
   # Verify enabled
   app$wait_for_js("$('#apply').prop('disabled') === false")
