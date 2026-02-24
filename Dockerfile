@@ -44,24 +44,23 @@ COPY renv/activate.R renv/activate.R
 
 # Restore dependencies from renv.lock to System Library
 # Using Noble (Ubuntu 24.04) binary repository for speed
+ENV RENV_PATHS_LIBRARY="/usr/local/lib/R/site-library"
 ENV RENV_CONFIG_REPOS_OVERRIDE="https://packagemanager.posit.co/cran/__linux__/noble/latest"
 
-RUN R -e "options(repos = c(CRAN = Sys.getenv('RENV_CONFIG_REPOS_OVERRIDE'))); \
+RUN Rscript -e "options(repos = c(CRAN = Sys.getenv('RENV_CONFIG_REPOS_OVERRIDE'))); \
     install.packages('renv'); \
-    renv::restore(library = '/usr/local/lib/R/site-library', confirm = FALSE); \
-    # Now explicitly install/update critical packages to ensure they are available in the system library \
-    # We do this AFTER restore to prevent renv from cleaning them up if they differ slightly from the lockfile \
-    critical_pkgs <- c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
-    install.packages(critical_pkgs, lib = '/usr/local/lib/R/site-library'); \
-    # Final verification \
-    installed <- installed.packages(lib.loc = '/usr/local/lib/R/site-library')[,'Package']; \
-    missing <- setdiff(critical_pkgs, installed); \
+    # Restore the environment \
+    renv::restore(confirm = FALSE); \
+    # Ensure critical tools are present in the system library \
+    tools <- c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
+    install.packages(tools); \
+    # Verification \
+    missing <- setdiff(tools, installed.packages()[,'Package']); \
     if (length(missing) > 0) { \
-    cat('\n\nERROR: The following critical packages are missing from /usr/local/lib/R/site-library:\n'); \
-    cat(paste('  -', missing, collapse = '\n'), '\n\n'); \
-    stop('Critical packages missing after restore') \
+    message('FAILED: Missing packages: ', paste(missing, collapse = ', ')); \
+    quit(status = 1); \
     } else { \
-    cat('\n\nSUCCESS: All critical packages verified in system library.\n\n'); \
+    message('SUCCESS: All critical packages verified.'); \
     }"
 
 # Copy the rest of the app
