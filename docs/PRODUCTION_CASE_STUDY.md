@@ -31,7 +31,7 @@ In production Shiny systems, observability is a baseline requirement. We impleme
 
 ### 5. Advanced End-to-End Verification
 Moved beyond simple "smoke tests" to full session simulation.
-- **State Transition Testing**: Verifying that cascading selections and validation rules work together to drive the UI state (e.g., visibility of the Apply button).
+- **State Transition Testing**: Verifying that cascading selections and validation rules work together to drive the UI state (e.g., interaction state [enabled/disabled] of the Apply button).
 - **Headless Stability**: Optimized Chromium-browser tests with explicit waiting and cleanup.
 
 ## Conclusion

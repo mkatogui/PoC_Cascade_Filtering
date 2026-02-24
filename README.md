@@ -1,46 +1,53 @@
 # BasicCascadeApp
 
 A modular Shiny app demonstrating a cascading filter system with strong input validation and a modal interface. 
-R CI/CD pipeline as a working template.
+This project serves as a production-ready R CI/CD template.
 
 ---
 
 ## Features
 
 - **Cascading Dropdowns**: Category -> Subcategory -> Product, with strict ordering invariants.
-- **Business Invariants**: Centralized in `R/constants.R` for zero drift between UI and logic.
-- **Validation**: Real-time, hardened type-checked validation with field-level feedback.
-- **Apply Button**: UX-friendly toggling (disabled when invalid) instead of jarring visibility flips.
-- **Observability**: Structured JSON-line logging with session correlation IDs for production audit.
-- **Versioning**: Automated semantic versioning and GitHub releases.
-- **Environment**: Deterministic "Zero Internet" deployments via Docker and `renv`.
+- **Business Invariants**: Centralized in [R/constants.R](file:///c:/Git/PoC_Cascade_Filtering/R/constants.R) for zero drift between UI and logic.
+- **Validation**: Real-time, hardened type-checked validation with field-level feedback via `shinyFeedback`.
+- **Apply Button**: UX-friendly toggling (disabled when invalid) to maintain layout stability.
+- **Observability**: Structured JSON-line logging with session correlation IDs for production audit ([R/logger.R](file:///c:/Git/PoC_Cascade_Filtering/R/logger.R)).
+- **Versioning**: Automated semantic versioning and GitHub releases integrated into CI/CD.
+- **Environment**: Deterministic builds via `renv` + pinned mirrors; runtime is offline-capable once image is built.
 
 ---
 
 ## Meta
 
-- **Topics:** `shiny`, `r`, `production-ready`, `cie-cd`, `docker`, `renv`, `validation`, `modular-design`
-- **Case Study:** [Production-Grade Shiny Engineering](docs/PRODUCTION_CASE_STUDY.md)
+- **Topics:** `shiny`, `r`, `production-ready`, `ci-cd`, `docker`, `renv`, `validation`, `modular-design`
+- **Case Study:** [Production-Grade Shiny Engineering](file:///c:/Git/PoC_Cascade_Filtering/docs/PRODUCTION_CASE_STUDY.md)
 
 ---
 
 ## Project Structure
 
 ```
-BasicCascadeApp/
-├── app.R
+PoC_Cascade_Filtering/
+├── app.R              # Main entry point
 ├── launch.R           # Enhanced app launcher for deployment
 ├── README.md
-├── shinyapps.yml      # Configuration for shinyapps.io deployment
-├── R/
-│   ├── data.R
+├── renv.lock          # Pin-point dependency manifest
+├── Dockerfile         # Hardened R 4.5.2 environment
+├── R/                 # Application components
+│   ├── config.R       # Global options
+│   ├── constants.R    # Business invariants (Dates, Labels)
+│   ├── logger.R       # JSON logging layer
+│   ├── init.R         # Safe environment initialization
+│   ├── validation.R   # Core validation logic
+│   ├── data.R         # Sample data definitions
 │   ├── filter_module_ui.R
 │   ├── filter_module_server.R
-│   ├── server.R
 │   ├── ui.R
-│   └── validation.R
-├── docs/
-│   └── GITHUB_ACTIONS.md
+│   └── server.R
+├── tests/             # Comprehensive test suite
+│   └── testthat/
+│       ├── test-validation.R    # Unit tests
+│       └── test-integration.R   # Browser-based E2E tests
 └── BasicCascadeApp.Rproj
 ```
 
@@ -71,7 +78,7 @@ BasicCascadeApp/
 1. Click **Open Filter** to open the modal.
 2. Select a Category, Subcategory, and Product.
 3. Enter Quantity, Comment, and Order Date.
-4. The **Apply Filter** button appears only when all fields are valid.
+4. The **Apply Filter** button **enables** only when all fields are valid.
 5. Click **Apply Filter** to save your selections, which are then displayed in the main UI.
 6. Use **Reset** to clear all fields in the modal.
 
@@ -96,41 +103,12 @@ Rules are defined in [R/constants.R](file:///c:/Git/PoC_Cascade_Filtering/R/cons
 
 ---
 
-## Suggestions for Extension
-
-- Handle cases where no data matches the filters (currently, the count is shown).
-- Modularize validation feedback further if you add more fields.
-- The `resetSelections` function in the filter module allows for easy external control.
-
----
-
 ## Testing
 
 This project includes both unit tests and integration tests:
 
 1. **Unit Tests**: Verifying validation logic in `R/validation.R` for core business rules (quantity, date ranges, comment length).
-2. **Integration Tests**: Full end-to-end browser simulation using `shinytest2`. This validates the cascading dropdown logic ("Electronics" -> "Phones") and ensures that validation state transitions (like the Apply button visibility) work correctly across the entire session.
-
-### Running Tests
-
-1. **Restore dependencies** (if not already done):
-
-    ```r
-    renv::restore()
-    ```
-
-2. **Run all tests**:
-
-    From the project root directory, run:
-
-    ```r
-    testthat::test_dir("tests/testthat")
-    ```
-
-Note: Integration tests might be skipped if shinytest2 cannot find the app or if running in a non-interactive environment.
-
-- Unit tests for validation logic are in `tests/testthat/test-validation.R`.
-- Integration tests for the Shiny app are in `tests/testthat/test-integration.R`.
+2. **Integration Tests**: Full end-to-end browser simulation using `shinytest2`. This validates the cascading dropdown logic ("Electronics" -> "Phones") and ensures that validation state transitions (like the Apply button disabling) work correctly across the entire session.
 
 ---
 
@@ -138,65 +116,19 @@ Note: Integration tests might be skipped if shinytest2 cannot find the app or if
 
 This project uses GitHub Actions for CI/CD to automatically:
 
-1. **Test the app** whenever code is pushed or pull requests are made
-2. **Deploy to shinyapps.io** when changes are pushed to the main branch
+1. **Test the app** whenever code is pushed or pull requests are made.
+2. **Deploy to shinyapps.io** when changes are pushed to the main branch.
 
 The CI/CD pipeline:
-- **Intelligent Image Recycling**: Uses content-based hashing of `renv.lock` and `Dockerfile` to reuse existing images in GHCR. This speeds up builds significantly when dependencies haven't changed.
-- **Automated Verification**: Runs both unit and integration tests in a headless container environment.
+- **Intelligent Image Recycling**: Uses content-based hashing of `renv.lock` and `Dockerfile` to reuse existing images in GHCR.
+- **Automated Verification**: Runs both unit and integration tests in a headless container environment with Google Chrome.
 - **Production-Strict**: Builds only deploy if 100% of tests pass.
-- **Reliable Mirroring**: Uses Posit Package Manager binary mirrors for stable and fast package restores.
-- **Emoji-Free Output**: All logs and summaries are forced to plain text for professional compatibility.
-- **Structured Logging**: Built-in observability layer (`R/logger.R`) for production auditing of application events.
-- **Semantic Release**: Automatic versioned tagging (`v*.*.*`) on every successful merge to the main branch.
-
-To set up deployment, you need to configure GitHub repository secrets:
-- `SHINYAPPS_NAME`: Your shinyapps.io account name
-- `SHINYAPPS_TOKEN`: Your shinyapps.io token
-- `SHINYAPPS_SECRET`: Your shinyapps.io secret
-- `APP_NAME`: (Optional) Custom app name for deployment (defaults to 'basiccascadeapp')
-
-See the workflow file in `.github/workflows/r-ci-cd.yml` for details.
-
-### Deployment Configuration
-
-1. **Standard deployment** via `app.R` - The primary entry point
-2. **Configuration-based deployment** via `shinyapps.yml` - Specifies dependencies and runtime options
-
-The CI/CD pipeline intelligently selects the best deployment method based on the environment.
-
----
-
-## CI/CD Setup
-
-This project includes a GitHub Actions workflow for continuous integration and deployment:
-
-- **Testing**: Automatically runs all tests in the `tests/testthat/` directory
-- **Deployment**: Deploys the app to shinyapps.io when tests pass
-- **Warning Handling**: Includes special handling for compiler warnings in testing
-- **Git Configuration**: Properly configures Git settings to work in CI environment
-- **CRAN Mirror**: Ensures package installation works properly in CI
-
-For more details on how warnings are handled, see [Warning Handling Documentation](tests/WARNING_HANDLING.md).
-
-For detailed information on the GitHub Actions workflow configuration, see [GitHub Actions Documentation](docs/GITHUB_ACTIONS.md).
-
----
-
-## Production Readiness
-
-This project is engineered for production, adhering to the principles of modularity, automated testing, and reproducible environments:
-
-- **Modular Architecture**: Functional logic is separated into `R/validation.R` and Shiny modules (`filter_module_*.R`).
-- **Reproducible Environment**: Uses `renv` to pin all R package versions, ensuring consistency across development and production.
-- **Automated Verification**: Comprehensive test suite (unit and integration) integrated into a CI/CD pipeline.
-- **CI/CD Excellence**: GitHub Actions pipeline automatically tests and deploys to `shinyapps.io` only when all checks pass.
-- **Dependency Control**: `renv.lock` ensures that "it works on my machine" translates to "it works in production".
+- **Reliable Mirroring**: Uses Posit Package Manager binary mirrors for stable lifecycle management.
+- **Structured Logging**: Built-in observability layer ([R/logger.R](file:///c:/Git/PoC_Cascade_Filtering/R/logger.R)) for production auditing.
+- **Semantic Release**: Automatic versioned tagging on every successful merge to the main branch.
 
 ---
 
 ## License
 
 MIT License
-
----
