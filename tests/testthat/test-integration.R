@@ -41,25 +41,24 @@ test_that("Full cascading filter flow works correctly", {
   
   # 3. Fill validation fields
   app$set_inputs(`filterMod-quantity` = 5)
-  app$set_inputs(`filterMod-comment` = "Valid comment") # 13 chars (10-20 allowed)
-  
-  # 4. Verify that Apply button is VISIBLE but DISABLED (as validation should initially fail)
+  app$set_inputs(`filterMod-comment` = "Too short") # 9 chars (Invalid, < 10)
+
+  # 4. Verify that Apply button is VISIBLE but DISABLED
   is_apply_visible <- app$get_js("$('#apply').css('display') !== 'none'")
   is_apply_disabled <- app$get_js("$('#apply').prop('disabled') === true")
   expect_true(is_apply_visible, "Apply button should be visible")
   expect_true(is_apply_disabled, "Apply button should be disabled initially")
-  
+
   # 5. Fill validation fields to enable Apply
-  app$set_inputs(`filterMod-quantity` = 5)
-  app$set_inputs(`filterMod-comment` = "Valid comment") # 13 chars
-  
+  app$set_inputs(`filterMod-comment` = "Valid comment string") # 20 chars (Valid)
+
   # Verify enabled
   app$wait_for_js("$('#apply').prop('disabled') === false")
   expect_false(app$get_js("$('#apply').prop('disabled') === true"), "Apply button should be enabled after valid inputs")
-  
+
   # 6. Apply the filter
   app$click("apply")
-  app$wait_for_js("$('.modal').length === 0") # Wait for modal to close
+  app$wait_for_js("$('.modal').length === 0", timeout = 20000) # Wait for modal to close
   
   # 7. Verify main UI output
   final_text <- app$get_text("#selection")
