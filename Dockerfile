@@ -16,6 +16,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtiff5-dev \
     libjpeg-dev \
     zlib1g-dev \
+    # Headless browser (Chromium) for integration tests
+    chromium-browser \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,8 +48,11 @@ RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux
     install.packages('renv'); \
     renv::restore(library = '/usr/local/lib/R/site-library', confirm = FALSE); \
     # Verify critical packages are available \
-    if (!all(c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect') %in% installed.packages(lib.loc = '/usr/local/lib/R/site-library')[,'Package'])) { \
-    stop('Critical packages missing after restore') \
+    critical_pkgs <- c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
+    installed <- installed.packages(lib.loc = '/usr/local/lib/R/site-library')[,'Package']; \
+    missing <- setdiff(critical_pkgs, installed); \
+    if (length(missing) > 0) { \
+    stop('Critical packages missing after restore: ', paste(missing, collapse = ", ")) \
     }"
 
 # Copy the rest of the app

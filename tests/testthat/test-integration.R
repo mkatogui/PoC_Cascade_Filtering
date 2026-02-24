@@ -4,22 +4,29 @@ library(shiny)
 library(shinytest2)
 
 test_that("Filter module functions correctly", {
-  # Skip test if not interactive or if shinytest2 isn't available
+  # Skip test if shinytest2 isn't available
   skip_if_not_installed("shinytest2")
-  skip_on_ci()
   
   # Get the absolute path to the app directory (project root)
-  app_dir <- normalizePath(file.path(dirname(dirname(getwd()))))
+  # When running via test_dir("tests/testthat"), getwd() is the project root
+  app_dir <- getwd()
   
   # Make sure app.R exists in the directory
   app_file <- file.path(app_dir, "app.R")
   if (!file.exists(app_file)) {
-    skip(paste("app.R not found at:", app_file))
+    # Try one level up if we are inside tests/testthat already
+    app_dir <- normalizePath("../..")
+    app_file <- file.path(app_dir, "app.R")
+  }
+  
+  if (!file.exists(app_file)) {
+    skip(paste("app.R not found at:", app_dir))
   }
   
   # Use tryCatch to provide more informative error messages
   app <- tryCatch({
-    AppDriver$new(app_dir, name = "BasicCascadeApp", timeout = 10000)
+    # Forces headless mode for CI stability
+    AppDriver$new(app_dir, name = "BasicCascadeApp", timeout = 20000, variant = NULL)
   }, error = function(e) {
     skip(paste("Failed to load app:", e$message))
     NULL
