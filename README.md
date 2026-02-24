@@ -20,7 +20,8 @@ This project serves as a production-ready R CI/CD template.
 ## Meta
 
 - **Topics:** `shiny`, `r`, `production-ready`, `ci-cd`, `docker`, `renv`, `validation`, `modular-design`
-- **Case Study:** [Production-Grade Shiny Engineering](file:///c:/Git/PoC_Cascade_Filtering/docs/PRODUCTION_CASE_STUDY.md)
+- **Case Study (Technical):** [Production-Grade Shiny Engineering](file:///c:/Git/PoC_Cascade_Filtering/docs/PRODUCTION_CASE_STUDY.md)
+- **Deep Dive (Engineering):** [Engineering Case Study](file:///c:/Git/PoC_Cascade_Filtering/docs/ENGINEERING_CASE_STUDY.md)
 
 ---
 
