@@ -5,24 +5,15 @@
 source("R/config.R")
 source("R/constants.R")
 
-# 2. Package Loading with Fail-Fast Check
-required_packages <- c(
-  "shiny", "shinyFeedback", "shinyjs", "tibble", "dplyr", "magrittr", "jsonlite", "digest"
-)
-
-missing_packages <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
-]
-
-if (length(missing_packages) > 0) {
-  stop(
-    "Missing required packages: ", paste(missing_packages, collapse = ", "),
-    "\nPlease restore the environment using renv::restore() or rebuild the Docker container."
-  )
-}
-
-# Load packages into current session
-invisible(lapply(required_packages, library, character.only = TRUE))
+# 2. Package Loading (explicit calls so renv can detect dependencies)
+library(shiny)
+library(shinyFeedback)
+library(shinyjs)
+library(tibble)
+library(dplyr)
+library(magrittr)
+library(jsonlite)
+library(digest)
 
 # 3. Core Infrastructure
 source("R/logger.R")
