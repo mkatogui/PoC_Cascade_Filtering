@@ -191,6 +191,48 @@ jobs:
             secret = Sys.getenv("SHINYAPPS_SECRET")
           )
           
+          # PRE-DEPLOYMENT GUARD: Check for and wait for active tasks
+          # This prevents HTTP 409 [Conflict] errors if a previous deployment is still finalizing
+          max_wait <- 300 # 5 minutes
+          wait_interval <- 30
+          waited <- 0
+          
+          repeat {
+            # Find the app if it exists to get the ID
+            apps <- try(applications(account = Sys.getenv("SHINYAPPS_NAME")), silent = TRUE)
+            target_app <- if (inherits(apps, "data.frame")) {
+              apps[apps$name == Sys.getenv("APP_NAME"), ]
+            } else {
+              NULL
+            }
+            
+            if (!is.null(target_app) && nrow(target_app) > 0) {
+              app_id <- target_app$id[1]
+              # Get tasks for this specific app
+              active_tasks <- try(tasks(appId = app_id, account = Sys.getenv("SHINYAPPS_NAME")), silent = TRUE)
+              
+              if (inherits(active_tasks, "data.frame") && nrow(active_tasks) > 0) {
+                # Look for in-progress tasks
+                # Standard rsconnect status is 'inprogress' or 'queued'
+                in_progress <- active_tasks[active_tasks$status %in% c("inprogress", "queued"), ]
+                
+                if (nrow(in_progress) > 0) {
+                  if (waited >= max_wait) {
+                    message("TIMEOUT: Active tasks still running after ", max_wait, "s. Proceeding anyway...")
+                    break
+                  }
+                  message("Deployment Guard: ", nrow(in_progress), " task(s) in progress (", 
+                          paste(in_progress$action, collapse = ", "), "). Waiting ", wait_interval, "s...")
+                  Sys.sleep(wait_interval)
+                  waited <- waited + wait_interval
+                  next
+                }
+              }
+            }
+            # No active tasks found or app doesn't exist yet
+            break
+          }
+          
           deployment <- deployApp(
             appDir = ".",
             appName = Sys.getenv("APP_NAME"),

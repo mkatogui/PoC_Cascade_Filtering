@@ -26,6 +26,7 @@ In production Shiny systems, observability is a baseline requirement. We impleme
 
 ### 4. High-Visibility Feedback & Versioning
 - **Job Summaries**: Condense complex test results into actionable Markdown tables directly in GitHub.
+- **Deployment Guard**: Implemented an automated wait-loop in the CI/CD pipeline that queries the shinyapps.io API. It detects "in-progress" or "queued" tasks and waits for them to clear before attempting a new deployment, preventing HTTP 409 [Conflict] errors.
 - **Semantic Versioning**: Automated GitHub tagging and releases via `.github/workflows/release.yml` to formalize version tracking throughout the lifecycle.
 
 ### 5. Advanced End-to-End Verification
