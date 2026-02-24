@@ -36,7 +36,8 @@ app_ui <- function() {
         offset = 1,
         
         # Header section
-        div(class = "app-header",
+        div(
+          class = "app-header",
           h3("Interactive Filter Demo with Input Validation"),
           p("This app demonstrates a modular cascading filter system with input validation."),
           actionButton("showModal", "Open Filter", class = "btn-primary btn-lg"),

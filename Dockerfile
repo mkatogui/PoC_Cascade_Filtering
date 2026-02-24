@@ -5,6 +5,9 @@ FROM rocker/r-ver:4.5.2@sha256:2165bc5c39bd72cd024d95ea5d52d3c77798e87046ae3c7f2
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
+    wget \
+    gnupg \
+    ca-certificates \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
@@ -16,22 +19,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtiff5-dev \
     libjpeg-dev \
     zlib1g-dev \
-    # Headless browser (Chromium) for integration tests
-    chromium-browser \
-    libnss3 \
-    libatk1.0-0t64 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2t64 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Google Chrome for headless testing (Point 28)
+# We use Google's official repo because the chromium-browser deb in Noble is a snap dummy.
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends google-chrome-stable && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 RUN mkdir /app

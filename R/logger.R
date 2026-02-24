@@ -33,6 +33,6 @@ log_event <- function(level, event, message, ...) {
 
 # Logger Sugars
 log_debug <- function(event, message, ...) log_event("debug", event, message, ...)
-log_info  <- function(event, message, ...) log_event("info", event, message, ...)
-log_warn  <- function(event, message, ...) log_event("warn", event, message, ...)
+log_info <- function(event, message, ...) log_event("info", event, message, ...)
+log_warn <- function(event, message, ...) log_event("warn", event, message, ...)
 log_error <- function(event, message, ...) log_event("error", event, message, ...)

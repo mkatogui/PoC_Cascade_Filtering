@@ -65,12 +65,12 @@ app_server <- function(input, output, session) {
 
     res <- module_out()
     if (isTRUE(res$valid)) {
-      selected$category    <- res$category
+      selected$category <- res$category
       selected$subcategory <- res$subcategory
-      selected$product     <- res$product
-      selected$quantity    <- res$quantity
-      selected$comment     <- res$comment
-      selected$orderDate   <- res$orderDate
+      selected$product <- res$product
+      selected$quantity <- res$quantity
+      selected$comment <- res$comment
+      selected$orderDate <- res$orderDate
 
       log_info("FILTER_SUCCESS", "Filters applied successfully",
         session_id = session_id,
@@ -96,11 +96,11 @@ app_server <- function(input, output, session) {
     }
 
     selections <- list(
-      Category    = get_val(selected$category),
+      Category = get_val(selected$category),
       Subcategory = get_val(selected$subcategory),
-      Product     = get_val(selected$product),
-      Quantity    = get_val(selected$quantity),
-      Comment     = get_val(selected$comment),
+      Product = get_val(selected$product),
+      Quantity = get_val(selected$quantity),
+      Comment = get_val(selected$comment),
       "Order Date" = if (!is.null(selected$orderDate)) format(selected$orderDate, "%Y-%m-%d") else "None"
     )
 
