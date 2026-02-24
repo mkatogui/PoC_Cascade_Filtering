@@ -72,9 +72,9 @@ test_that("Full cascading filter flow works correctly", {
 
   # 7. Verify main UI output
   final_text <- app$get_text("#selection")
-  expect_match(final_text, "Category : Electronics")
-  expect_match(final_text, "Product : iPhone")
-  expect_match(final_text, "Quantity : 5")
+  expect_match(final_text, "Category: Electronics")
+  expect_match(final_text, "Product: iPhone")
+  expect_match(final_text, "Quantity: 5")
 
   # 8. REPEAT CYCLE: Verify no observer duplication (Point 23)
   app$click("showModal")
@@ -86,5 +86,5 @@ test_that("Full cascading filter flow works correctly", {
   app$wait_for_idle()
 
   # Cleanup
-  app$click(selector = ".modal .btn-secondary", click_js = TRUE) # Cancel/Close
+  app$click(selector = ".modal .btn-secondary") # Cancel/Close
 })
