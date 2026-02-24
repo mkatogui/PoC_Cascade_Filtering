@@ -1,6 +1,6 @@
 # Production Dockerfile for PoC Cascade Filtering App
-# Using Rocker 4.4.2 which is based on Ubuntu 24.04 (Noble)
-FROM rocker/r-ver:4.4.2
+# Using Rocker 4.4.2 (Ubuntu Noble) - Pinned by digest for 100% reproducibility
+FROM rocker/r-ver:4.4.2@sha256:d15904de22aebca1183f3f22b72f10b7f6c3ef6fd7922d4f8268e37a281e4b33
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

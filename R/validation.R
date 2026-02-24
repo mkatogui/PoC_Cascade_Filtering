@@ -1,39 +1,66 @@
-# Validation functions for filter module
+# Validation logic for filter module
+
+# --- Low-level Validators ---
 
 is_valid_category <- function(category) {
-  !is.null(category) && category != ""
+  # Guard against vectors/non-character
+  if (length(category) != 1 || !is.character(category)) return(FALSE)
+  nzchar(category)
 }
 
 is_valid_subcategory <- function(subcategory, category) {
-  !is.null(subcategory) && subcategory != "" && is_valid_category(category)
+  if (length(subcategory) != 1 || !is.character(subcategory)) return(FALSE)
+  nzchar(subcategory) && is_valid_category(category)
 }
 
 is_valid_product <- function(product, subcategory, category) {
-  !is.null(product) && product != "" && is_valid_subcategory(subcategory, category)
+  if (length(product) != 1 || !is.character(product)) return(FALSE)
+  nzchar(product) && is_valid_subcategory(subcategory, category)
 }
 
 is_valid_quantity <- function(quantity) {
-  !is.null(quantity) && !is.na(quantity) && quantity > 0 && quantity %% 1 == 0
+  # Harden checks: must be scalar, numeric, finite, positive, and integer
+  if (length(quantity) != 1 || !is.numeric(quantity)) return(FALSE)
+  if (!is.finite(quantity)) return(FALSE)
+  
+  quantity > 0 && floor(quantity) == quantity
 }
 
 is_valid_comment <- function(comment) {
-  !is.null(comment) && nchar(comment) >= 10 && nchar(comment) <= 20
+  # Decide: Required Len 10-20
+  if (length(comment) != 1 || !is.character(comment)) return(FALSE)
+  if (is.na(comment)) return(FALSE)
+  
+  len <- nchar(comment)
+  len >= COMMENT_MIN_LENGTH && len <= COMMENT_MAX_LENGTH
 }
 
 is_valid_order_date <- function(orderDate) {
-  !is.null(orderDate) && !is.na(orderDate) &&
-    orderDate >= as.Date("2023-01-01") && orderDate <= as.Date("2026-12-31")
+  # Guard against non-Date or vectors
+  if (length(orderDate) != 1 || !inherits(orderDate, "Date")) return(FALSE)
+  if (is.na(orderDate)) return(FALSE)
+  
+  orderDate >= MIN_ORDER_DATE && orderDate <= MAX_ORDER_DATE
 }
 
+# --- Aggregators ---
+
 all_fields_valid <- function(input) {
-  cat <- input$category
-  subcat <- input$subcategory
-  prod <- input$product
+  # Defensive reading from input
+  cat    <- tryCatch(input$category,    error = function(e) NULL)
+  subcat <- tryCatch(input$subcategory, error = function(e) NULL)
+  prod   <- tryCatch(input$product,     error = function(e) NULL)
+  qty    <- tryCatch(input$quantity,    error = function(e) NULL)
+  cmt    <- tryCatch(input$comment,     error = function(e) NULL)
+  dt     <- tryCatch(input$orderDate,   error = function(e) NULL)
   
-  is_valid_category(cat) &&
-    is_valid_subcategory(subcat, cat) &&
-    is_valid_product(prod, subcat, cat) &&
-    is_valid_quantity(input$quantity) &&
-    is_valid_comment(input$comment) &&
-    is_valid_order_date(input$orderDate)
+  # Ensure scalar TRUE/FALSE
+  valid <- is_valid_category(cat) &&
+           is_valid_subcategory(subcat, cat) &&
+           is_valid_product(prod, subcat, cat) &&
+           is_valid_quantity(qty) &&
+           is_valid_comment(cmt) &&
+           is_valid_order_date(dt)
+           
+  isTRUE(valid)
 }

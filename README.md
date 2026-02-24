@@ -7,14 +7,13 @@ R CI/CD pipeline as a working template.
 
 ## Features
 
-- **Cascading Dropdowns:** Category -> Subcategory -> Product, all required.
-- **Additional Inputs:** Quantity (positive integer), Comment (10-20 characters), Order Date (2023-01-01 to 2026-12-31).
-- **Validation:** Real-time, with field-level feedback using `shinyFeedback`.
-- **Apply Button:** Only visible when all fields are valid.
-- **Reset Button:** Resets all modal fields.
-- **Observability:** Structured logging of key events (validation, state changes) to `stderr` for production audit.
-- **Versioning:** Automated semantic versioning and GitHub releases via tagging workflows.
-- **Selections:** Displayed in the main UI with validation status.
+- **Cascading Dropdowns**: Category -> Subcategory -> Product, with strict ordering invariants.
+- **Business Invariants**: Centralized in `R/constants.R` for zero drift between UI and logic.
+- **Validation**: Real-time, hardened type-checked validation with field-level feedback.
+- **Apply Button**: UX-friendly toggling (disabled when invalid) instead of jarring visibility flips.
+- **Observability**: Structured JSON-line logging with session correlation IDs for production audit.
+- **Versioning**: Automated semantic versioning and GitHub releases.
+- **Environment**: Deterministic "Zero Internet" deployments via Docker and `renv`.
 
 ---
 
@@ -78,12 +77,12 @@ BasicCascadeApp/
 
 ---
 
-## Validation Rules
+## Validation Rules (Constants-Driven)
 
-- **Category, Subcategory, Product:** Required, must be selected in order.
-- **Quantity:** Must be a positive integer.
-- **Comment:** 10-20 characters.
-- **Order Date:** Between 2023-01-01 and 2026-12-31.
+Rules are defined in [R/constants.R](file:///c:/Git/PoC_Cascade_Filtering/R/constants.R):
+- **Quantity**: Positive integer (scalar).
+- **Comment**: 10-20 characters (required).
+- **Order Date**: Between `2023-01-01` and `2026-12-31`.
 
 ---
 

@@ -98,11 +98,20 @@ jobs:
       
       - name: Run tests
         run: |
-          # Debug environment
-          message("R Version: ", getRversion())
-          message("Library Paths: ", paste(.libPaths(), collapse = ", "))
+          # 1. Verify dependency integrity
+          if (!renv::status()$synchronized) {
+            stop("renv.lock is out of sync with installed packages. Please run renv::snapshot() locally.")
+          }
           
-          # The environment is already correctly set up in the container system library
+          # 2. Check code style (Point 26)
+          # We only warn here but could stop if desired
+          if (!requireNamespace("styler", quietly = TRUE)) install.packages("styler")
+          style_res <- styler::style_dir("R", dry = "on")
+          if (any(style_res$changed)) {
+            message("WARNING: Code style issues detected. Please run styler::style_dir() locally.")
+          }
+          
+          # 3. Run test suite with strict warnings
           library(testthat)
           results <- test_dir("tests/testthat", reporter = "summary")
           

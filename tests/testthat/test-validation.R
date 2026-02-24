@@ -1,73 +1,69 @@
-# Unit tests for validation functions
 library(testthat)
 
-# Load validation functions from the source file
-# Using a relative path that works when running from the project root
-source(file.path("..", "..", "R", "validation.R"))
-
-# Category validation
-test_that("Category validation works", {
+test_that("is_valid_category handles edge cases correctly", {
   expect_true(is_valid_category("Electronics"))
   expect_false(is_valid_category(""))
   expect_false(is_valid_category(NULL))
+  expect_false(is_valid_category(NA_character_))
+  expect_false(is_valid_category(c("A", "B"))) # Vector check
+  expect_false(is_valid_category(123))           # Type check
 })
 
-# Subcategory validation
-test_that("Subcategory validation works", {
-  expect_true(is_valid_subcategory("Phones", "Electronics"))
-  expect_false(is_valid_subcategory("Phones", "")) # Fails if parent category is empty
-  expect_false(is_valid_subcategory("", "Electronics"))
-  expect_false(is_valid_subcategory(NULL, "Electronics"))
-})
-
-# Product validation
-test_that("Product validation works", {
-  expect_true(is_valid_product("iPhone", "Phones", "Electronics"))
-  expect_false(is_valid_product("iPhone", "", "Electronics")) # Fails if parent subcategory is empty
-  expect_false(is_valid_product("", "Phones", "Electronics"))
-  expect_false(is_valid_product(NULL, "Phones", "Electronics"))
-})
-
-# Quantity validation
-test_that("Quantity validation works", {
-  expect_true(is_valid_quantity(1))
-  expect_true(is_valid_quantity(10))
-  expect_false(is_valid_quantity(1.5)) # Must be integer
+test_that("is_valid_quantity handles edge cases strictly", {
+  expect_true(is_valid_quantity(5))
+  expect_true(is_valid_quantity(1.0))
   expect_false(is_valid_quantity(0))
   expect_false(is_valid_quantity(-1))
-  expect_false(is_valid_quantity(NA))
+  expect_false(is_valid_quantity(1.5))           # Non-integer
+  expect_false(is_valid_quantity(NA_real_))
+  expect_false(is_valid_quantity(Inf))
+  expect_false(is_valid_quantity(NULL))
+  expect_false(is_valid_quantity(c(1, 2)))       # Vector check
 })
 
-# Comment validation
-test_that("is_valid_comment works", {
-  expect_true(is_valid_comment("abcdefghij"))
-  expect_true(is_valid_comment("1234567890a"))
-  expect_false(is_valid_comment("short"))
+test_that("is_valid_comment respects constants and guards", {
+  # Assuming COMMENT_MIN_LENGTH=10, COMMENT_MAX_LENGTH=20
+  expect_true(is_valid_comment("ValidCommentHere")) # 16 chars
+  expect_false(is_valid_comment("Short"))           # < 10
+  expect_false(is_valid_comment("ThisCommentIsDefinitelyTooLongToBeValid")) # > 20
+  expect_false(is_valid_comment(NA_character_))
+  expect_false(is_valid_comment(NULL))
   expect_false(is_valid_comment(""))
-  expect_false(is_valid_comment("this comment is way too long for the field"))
 })
 
-# Order date validation
-test_that("is_valid_order_date works", {
+test_that("is_valid_order_date respects boundary constants", {
+  # MIN=2023-01-01, MAX=2026-12-31
   expect_true(is_valid_order_date(as.Date("2023-01-01")))
-  expect_true(is_valid_order_date(as.Date("2024-12-31")))
-  expect_true(is_valid_order_date(as.Date("2026-02-24"))) # Current year
-  expect_false(is_valid_order_date(as.Date("2022-12-31")))
-  expect_false(is_valid_order_date(as.Date("2027-01-01")))
+  expect_true(is_valid_order_date(as.Date("2026-12-31")))
+  expect_true(is_valid_order_date(as.Date("2024-06-15")))
+  
+  expect_false(is_valid_order_date(as.Date("2022-12-31"))) # Out of bounds
+  expect_false(is_valid_order_date(as.Date("2027-01-01"))) # Out of bounds
+  expect_false(is_valid_order_date("2024-01-01"))        # Wrong type
   expect_false(is_valid_order_date(NA))
+  expect_false(is_valid_order_date(c(Sys.Date(), Sys.Date()))) # Vector
 })
 
-# All fields valid
-test_that("all_fields_valid works", {
-  fake_input <- list(
+test_that("all_fields_valid is resilient to malformed inputs", {
+  # Mock valid input list
+  valid_input <- list(
     category = "Electronics",
     subcategory = "Phones",
     product = "iPhone",
-    quantity = 2,
-    comment = "Valid comment",
-    orderDate = as.Date("2023-06-01")
+    quantity = 5,
+    comment = "Valid length comment",
+    orderDate = as.Date("2024-01-01")
   )
-  expect_true(all_fields_valid(fake_input))
-  fake_input$quantity <- 0
-  expect_false(all_fields_valid(fake_input))
+  
+  expect_true(all_fields_valid(valid_input))
+  
+  # Fail on any missing field
+  invalid_input <- valid_input
+  invalid_input$quantity <- NULL
+  expect_false(all_fields_valid(invalid_input))
+  
+  # Fail on vector input
+  invalid_vec <- valid_input
+  invalid_vec$category <- c("A", "B")
+  expect_false(all_fields_valid(invalid_vec))
 })

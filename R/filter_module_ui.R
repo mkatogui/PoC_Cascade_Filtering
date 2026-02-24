@@ -13,9 +13,9 @@ filterModuleUI <- function(id) {
     # Additional Information Section
     div(
       h4("Additional Information"),
-      numericInput(ns("quantity"), "Quantity *", value = 1, min = 0, step = 1),
-      textInput(ns("comment"), "Comment *", value = "", placeholder = "10-20 characters"),
-      dateInput(ns("orderDate"), "Order Date *", value = Sys.Date(), min = "2023-01-01", max = "2024-12-31")
+      numericInput(ns("quantity"), QUANTITY_LABEL, value = 1, min = 0, step = 1),
+      textInput(ns("comment"), COMMENT_LABEL, value = "", placeholder = "Required"),
+      dateInput(ns("orderDate"), "Order Date *", value = DEFAULT_DATE, min = MIN_ORDER_DATE, max = MAX_ORDER_DATE)
     ),
     # Real-time filter display
     div(

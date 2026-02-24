@@ -47,9 +47,9 @@ app_ui <- function() {
         div(class = "info-box",
           h4("Input Validation Rules:"),
           tags$ul(
-            tags$li(strong("Quantity:"), "Must be a positive number"),
-            tags$li(strong("Comment:"), "Must be between 10-20 characters"),
-            tags$li(strong("Order Date:"), "Must be between January 1, 2023 and December 31, 2024")
+            tags$li(strong("Quantity:"), QUANTITY_LABEL),
+            tags$li(strong("Comment:"), COMMENT_LABEL),
+            tags$li(strong("Order Date:"), ORDER_DATE_RULE_TEXT)
           )
         ),
         

@@ -1,8 +1,12 @@
 # Define server logic
 app_server <- function(input, output, session) {
-    log_info("APP_START", "Main app server logic started")
-    
-    # Store selected values
+  # Session-level correlation ID
+  session_id <- paste0("sess_", substr(digest::digest(Sys.time()), 1, 8))
+  log_info("APP_START", "Main app server logic started", session_id = session_id)
+
+  # --- State Management ---
+
+  # Store selected values
   selected <- reactiveValues(
     category = NULL,
     subcategory = NULL,
@@ -12,132 +16,109 @@ app_server <- function(input, output, session) {
     orderDate = NULL
   )
 
-  # Use a module-scoped reactiveVal to store filterValues
-  filterValues <- reactiveVal()
+  # Instantiate the filter module ONCE at app start (Point 6)
+  # This prevents observer accumulation over multiple modal cycles.
+  module_out <- filterModuleServer("filterMod", sample_data)
+
+  # --- Event Handlers ---
 
   # Show modal when button is clicked
   observeEvent(input$showModal, {
-    log_info("MODAL_OPEN", "User clicked Open Filter button")
+    log_info("MODAL_OPEN", "User clicked Open Filter button", session_id = session_id)
+
     showModal(modalDialog(
       title = "Filter Options",
-      
+
       # Insert the filter module UI
       filterModuleUI("filterMod"),
-      
+
       # Modal buttons
       footer = tagList(
         actionButton("reset", "Reset", class = "btn-secondary"),
-        shinyjs::hidden(actionButton("apply", "Apply Filter", class = "btn-primary")),
+        # Start as disabled instead of hidden (Point 14)
+        shinyjs::disabled(actionButton("apply", "Apply Filter", class = "btn-primary")),
         modalButton("Cancel")
       ),
-      # Changed from 'm' to 'l' for a larger modal
       size = "l",
       easyClose = TRUE
     ))
-    # Initialize the filter module only once per modal open
-    filterValues(filterModuleServer("filterMod", sample_data))
   })
-  
-  # Reset all selections in modal
+
+  # Reset module inputs
   observeEvent(input$reset, {
-    fv <- filterValues()
-    if (!is.null(fv)) fv()$reset()
+    module_out()$reset()
   })
-  
-  # Toggle Apply button visibility based on validation
+
+  # Toggle Apply button state based on validation (Point 14)
   observe({
-    fv <- filterValues()
-    if (!is.null(fv)) {
-      values <- fv()
-      if (isTRUE(values$valid)) {
-        shinyjs::show("apply")
-      } else {
-        shinyjs::hide("apply")
-      }
+    res <- module_out()
+    if (isTRUE(res$valid)) {
+      shinyjs::enable("apply")
+    } else {
+      shinyjs::disable("apply")
     }
   })
-  
+
   # Apply filters and close modal
   observeEvent(input$apply, {
-    log_info("FILTER_APPLY_CLICK", "User clicked Apply Filter button")
-    fv <- filterValues()
-    if (!is.null(fv)) {
-      values <- fv()
-      if (isTRUE(values$valid)) {
-        selected$category <- values$category
-        selected$subcategory <- values$subcategory
-        selected$product <- values$product
-        selected$quantity <- values$quantity
-        selected$comment <- values$comment
-        selected$orderDate <- values$orderDate
-        
-        log_info("FILTER_SUCCESS", "Filters applied successfully",
-                 category = values$category,
-                 subcategory = values$subcategory,
-                 product = values$product,
-                 quantity = values$quantity)
-                 
-        # Close the modal
-        removeModal()
-      } else {
-        # Show notification if there are validation errors
-        showNotification("Please fill in all required fields correctly before applying.", type = "error")
-      }
+    log_info("FILTER_APPLY_CLICK", "User clicked Apply Filter button", session_id = session_id)
+
+    res <- module_out()
+    if (isTRUE(res$valid)) {
+      selected$category    <- res$category
+      selected$subcategory <- res$subcategory
+      selected$product     <- res$product
+      selected$quantity    <- res$quantity
+      selected$comment     <- res$comment
+      selected$orderDate   <- res$orderDate
+
+      log_info("FILTER_SUCCESS", "Filters applied successfully",
+        session_id = session_id,
+        category = res$category,
+        subcategory = res$subcategory,
+        product = res$product,
+        quantity = res$quantity
+      )
+
+      removeModal()
+    } else {
+      showNotification("Please fill in all required fields correctly.", type = "error")
     }
   })
-  
-  # Display the selection based on applied values
+
+  # --- Outputs ---
+
+  # Display selection on main page
   output$selection <- renderPrint({
-    # Collect all selections
+    # Helper to clean display
+    get_val <- function(x) {
+      if (is.null(x) || (is.character(x) && !nzchar(x))) "None" else x
+    }
+
     selections <- list(
-      Category = if(!is.null(selected$category) && selected$category != "") 
-                    selected$category else "None",
-      Subcategory = if(!is.null(selected$subcategory) && selected$subcategory != "") 
-                       selected$subcategory else "None",
-      Product = if(!is.null(selected$product) && selected$product != "") 
-                  selected$product else "None",
-      Quantity = if(!is.null(selected$quantity)) selected$quantity else "None",
-      Comment = if(!is.null(selected$comment) && selected$comment != "") 
-                 selected$comment else "None",
-      "Order Date" = if(!is.null(selected$orderDate)) 
-                      format(selected$orderDate, "%Y-%m-%d") else "None"
+      Category    = get_val(selected$category),
+      Subcategory = get_val(selected$subcategory),
+      Product     = get_val(selected$product),
+      Quantity    = get_val(selected$quantity),
+      Comment     = get_val(selected$comment),
+      "Order Date" = if (!is.null(selected$orderDate)) format(selected$orderDate, "%Y-%m-%d") else "None"
     )
-    
-    # Print each selection
-    for(name in names(selections)) {
+
+    for (name in names(selections)) {
       cat(name, ": ", selections[[name]], "\n", sep = "")
     }
-      # Show validation status if any selections have been made
-    if(!is.null(selected$quantity) || 
-       (!is.null(selected$comment) && selected$comment != "") || 
-       !is.null(selected$orderDate)) {
-      
+
+    # Show validation status using shared validators (Point 15)
+    has_selection <- !is.null(selected$category) || !is.null(selected$quantity)
+
+    if (has_selection) {
       cat("\n--- Validation Status ---\n")
-      
-      # Validate quantity
-      if(!is.null(selected$quantity)) {
-        qty_valid <- selected$quantity > 0
-        cat("Quantity: ", ifelse(qty_valid, "Valid", "Invalid"), "\n")
-      }
-      
-      # Validate comment
-      if(!is.null(selected$comment)) {
-        comment_length <- nchar(selected$comment)
-        comment_empty <- comment_length == 0
-        comment_valid <- if(comment_empty) TRUE else (comment_length >= 10 && comment_length <= 20)
-        cat("Comment: ", 
-            ifelse(comment_empty, "Not provided", 
-                   ifelse(comment_valid, "Valid", "Invalid")), 
-            "\n")
-      }
-      
-      # Validate date
-      if(!is.null(selected$orderDate)) {
-        date_valid <- !is.na(selected$orderDate) && 
-                     selected$orderDate >= as.Date("2023-01-01") && 
-                     selected$orderDate <= as.Date("2024-12-31")
-        cat("Date: ", ifelse(date_valid, "Valid", "Invalid"), "\n")
-      }
+      cat("Category: ", ifelse(is_valid_category(selected$category), "Valid", "Invalid"), "\n")
+      cat("Subcategory: ", ifelse(is_valid_subcategory(selected$subcategory, selected$category), "Valid", "Invalid"), "\n")
+      cat("Product: ", ifelse(is_valid_product(selected$product, selected$subcategory, selected$category), "Valid", "Invalid"), "\n")
+      cat("Quantity: ", ifelse(is_valid_quantity(selected$quantity), "Valid", "Invalid"), "\n")
+      cat("Comment: ", ifelse(is_valid_comment(selected$comment), "Valid", "Invalid"), "\n")
+      cat("Date: ", ifelse(is_valid_order_date(selected$orderDate), "Valid", "Invalid"), "\n")
     }
   })
 }

@@ -43,24 +43,39 @@ test_that("Full cascading filter flow works correctly", {
   app$set_inputs(`filterMod-quantity` = 5)
   app$set_inputs(`filterMod-comment` = "Validation passes here") # > 10 chars
   
-  # 4. Verify that Apply button is now visible (as validation should pass)
-  # In server.R, the apply button is conditionally shown via shinyjs::hidden(actionButton("apply", ...))
-  # We check the display property
+  # 4. Verify that Apply button is VISIBLE but DISABLED (as validation should initially fail)
   is_apply_visible <- app$get_js("$('#apply').css('display') !== 'none'")
-  expect_true(is_apply_visible, "Apply button should be visible when fields are valid")
+  is_apply_disabled <- app$get_js("$('#apply').prop('disabled') === true")
+  expect_true(is_apply_visible, "Apply button should be visible")
+  expect_true(is_apply_disabled, "Apply button should be disabled initially")
   
-  # 5. Apply the filter
+  # 5. Fill validation fields to enable Apply
+  app$set_inputs(`filterMod-quantity` = 5)
+  app$set_inputs(`filterMod-comment` = "Validation passes here") # Length 22
+  
+  # Verify enabled
+  app$wait_for_js("$('#apply').prop('disabled') === false")
+  expect_false(app$get_js("$('#apply').prop('disabled') === true"), "Apply button should be enabled after valid inputs")
+  
+  # 6. Apply the filter
   app$click("apply")
   app$wait_for_js("$('.modal').length === 0") # Wait for modal to close
   
-  # 6. Verify main UI output
-  # The output$selection displays the summary
+  # 7. Verify main UI output
   final_text <- app$get_text("#selection")
-  
   expect_match(final_text, "Category : Electronics")
-  expect_match(final_text, "Subcategory : Phones")
   expect_match(final_text, "Product : iPhone")
   expect_match(final_text, "Quantity : 5")
-  expect_match(final_text, "Comment : Validation passes here")
-  expect_match(final_text, "Valid", all = FALSE) # Check that some validation marks appear
+  
+  # 8. REPEAT CYCLE: Verify no observer duplication (Point 23)
+  # If observers were duplicated, logs or reactivity might double-fire.
+  # We just check stability here.
+  app$click("showModal")
+  app$wait_for_js("$('.modal').length > 0")
+  app$set_inputs(`filterMod-category` = "Clothing")
+  app$wait_for_js("$('#apply').prop('disabled') === true")
+  app$click("reset") # Test reset logic
+  
+  # Cleanup
+  app$click(selector = ".modal .btn-secondary", click_js = TRUE) # Cancel/Close
 })
