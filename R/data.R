@@ -17,4 +17,9 @@ sample_data <- tibble::tribble(
   "Home",        "Kitchen",       "Blender"
 )
 
-log_info("DATA_LOADED", "Sample data loaded successfully", rows = nrow(sample_data))
+# Defensive logging check (Point 26)
+if (exists("log_info")) {
+  log_info("DATA_LOADED", "Sample data loaded successfully", rows = nrow(sample_data))
+} else {
+  message("DATA_LOADED: Sample data loaded successfully (logger not available yet)")
+}

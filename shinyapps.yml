@@ -1,24 +1,12 @@
 # Configuration file for shinyapps.io
-# This file helps set dependencies for rsconnect deployments
+# Documentation: https://docs.posit.co/shinyapps.io/getting-started.html#deploying-applications
 
-# Define required packages that will be installed by shinyapps.io
-packages:
-  - shiny
-  - shinyFeedback
-  - shinyjs
-  - tibble
-  - dplyr
-  - magrittr  # For the pipe operator
-  - tidyr
-  - readr
-
-# Tell rsconnect if this is a Shiny app
-appType: shiny
-
-# Primary file to use for deployment
+# Primary entry point
 primaryDoc: app.R
 
-# Configure the server - these are sensible defaults
+# environment setup
+# We rely on renv.lock for deterministic builds. 
+appType: shiny
 runtime: R
-version: 4.2.0
+version: 4.5.2
 locale: en_US

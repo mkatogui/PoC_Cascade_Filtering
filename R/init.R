@@ -2,12 +2,19 @@
 # Sources all components in correct order
 
 # 1. Logging FIRST (Point 6, 16)
-# Ensure logger is available before any other component sources
-source("R/logger.R")
+# Explicitly source into GlobalEnv to ensure visibility on shinyapps.io
+source("R/logger.R", local = .GlobalEnv)
+
+# Verify logger is available (Defensive)
+if (!exists("log_info", envir = .GlobalEnv)) {
+  log_info <- function(...) {
+    message("Fallback log_info: ", paste(...))
+  }
+}
 
 # 2. Configuration & Constants
-source("R/config.R")
-source("R/constants.R")
+source("R/config.R", local = .GlobalEnv)
+source("R/constants.R", local = .GlobalEnv)
 
 # 3. Load Core Dependencies
 # Explicit library() calls are required for renv to detect usage
@@ -20,13 +27,13 @@ library(jsonlite)
 library(digest)
 
 # 4. Utilities & Logic
-source("R/validation.R")
-source("R/data.R")
+source("R/validation.R", local = .GlobalEnv)
+source("R/data.R", local = .GlobalEnv)
 
 # 5. UI & Server
-source("R/filter_module_ui.R")
-source("R/filter_module_server.R")
-source("R/ui.R")
-source("R/server.R")
+source("R/filter_module_ui.R", local = .GlobalEnv)
+source("R/filter_module_server.R", local = .GlobalEnv)
+source("R/ui.R", local = .GlobalEnv)
+source("R/server.R", local = .GlobalEnv)
 
 log_info("INIT_COMPLETE", "Application components sourced successfully")
