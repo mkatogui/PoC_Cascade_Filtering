@@ -30,7 +30,13 @@ COPY renv/activate.R renv/activate.R
 
 # Restore dependencies to System Library for global visibility in CI
 # Using Noble (Ubuntu 24.04) binary repository for speed
-RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); install.packages('renv'); renv::restore(library = '/usr/local/lib/R/site-library', confirm = FALSE)"
+RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); \
+    install.packages('renv'); \
+    renv::restore(library = '/usr/local/lib/R/site-library', confirm = FALSE); \
+    # Verify critical packages are available \
+    if (!all(c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect') %in% installed.packages(lib.loc = '/usr/local/lib/R/site-library')[,'Package'])) { \
+    stop('Critical packages missing after restore') \
+    }"
 
 # Copy the rest of the app
 COPY . .

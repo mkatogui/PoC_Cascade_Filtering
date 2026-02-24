@@ -65,7 +65,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     env:
       RENV_CONFIG_ACTIVATE: "FALSE"
-      R_LIBS_USER: ""
+      R_LIBS_SITE: "/usr/local/lib/R/site-library"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -74,8 +74,11 @@ jobs:
       
       - name: Run tests
         run: |
+          # Debug environment
+          message("R Version: ", getRversion())
+          message("Library Paths: ", paste(.libPaths(), collapse = ", "))
+          
           # The environment is already correctly set up in the container system library
-          # We disable renv activation to ensure system libraries are used
           library(testthat)
           results <- test_dir("tests/testthat", reporter = "summary")
           
@@ -123,7 +126,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     env:
       RENV_CONFIG_ACTIVATE: "FALSE"
-      R_LIBS_USER: ""
+      R_LIBS_SITE: "/usr/local/lib/R/site-library"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
