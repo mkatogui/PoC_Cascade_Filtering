@@ -5,11 +5,11 @@ filterModuleServer <- function(id, data) {
 
     # --- Cascading Logic ---
 
-    observe({
-      updateSelectInput(session, "category",
-        choices = c("Select..." = "", unique(data$Category))
-      )
-    })
+    # Initialize category choices ONCE (Point 6)
+    # Don't use observe() here as it would reset selection on every flush
+    updateSelectInput(session, "category",
+      choices = c("Select..." = "", unique(data$Category))
+    )
 
     observeEvent(input$category, {
       if (input$category != "") {
