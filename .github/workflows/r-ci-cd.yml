@@ -50,13 +50,16 @@ jobs:
           
       - name: Output image tag
         id: image_info
-        run: echo "image=ghcr.io/${{ github.repository }}:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+        run: |
+          # GHCR requires lowercase repository names
+          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=${IMAGE_NAME}:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
 
   test:
     needs: build-image
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      image: ghcr.io/mkatogui/poc_cascade_filtering:sha-${{ github.sha }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -114,7 +117,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      image: ghcr.io/mkatogui/poc_cascade_filtering:sha-${{ github.sha }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
