@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Headless browser (Chromium) for integration tests
     chromium-browser \
     libnss3 \
-    libatk1.0-0 \
+    libatk1.0-0t64 \
     libatk-bridge2.0-0 \
     libcups2 \
     libdrm2 \
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxfixes3 \
     libxrandr2 \
     libgbm1 \
-    libasound2 \
+    libasound2t64 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
