@@ -1,7 +1,4 @@
-# Load required packages with error handling
-if (!requireNamespace("tibble", quietly = TRUE)) {
-  install.packages("tibble")
-}
+# Load required packages
 library(tibble)
 
 # Create sample data

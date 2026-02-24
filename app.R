@@ -1,8 +1,9 @@
-# Set CRAN mirror for package installations
-options(repos = c(CRAN = "https://cloud.r-project.org"))
-
-# Configure warning handling
-options(warn = 1)  # Print warnings but don't stop execution
+# Configure application options
+options(
+  repos = c(CRAN = "https://cloud.r-project.org"),
+  warn = 1,                 # Print warnings but don't stop execution
+  poc.log_level = "info"    # Standard production log level (debug, info, warn, error)
+)
 
 # Load required packages with error handling
 required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "dplyr", "magrittr")
