@@ -1,6 +1,6 @@
 # Production Dockerfile for PoC Cascade Filtering App
-# Using Rocker 4.4.2 (Ubuntu Noble) - Pinned by digest for 100% reproducibility
-FROM rocker/r-ver:4.4.2@sha256:d15904de22aebca1183f3f22b72f10b7f6c3ef6fd7922d4f8268e37a281e4b33
+# Using Rocker 4.5.2 (Ubuntu Noble) - Pinned by digest for 100% reproducibility
+FROM rocker/r-ver:4.5.2@sha256:2165bc5c39bd72cd024d95ea5d52d3c77798e87046ae3c7f283036bbb38f3c44
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
