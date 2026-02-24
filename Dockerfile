@@ -42,9 +42,11 @@ COPY renv.lock renv.lock
 COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 
-# Restore dependencies to System Library for global visibility in CI
+# Restore dependencies from renv.lock to System Library
 # Using Noble (Ubuntu 24.04) binary repository for speed
-RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); \
+ENV RENV_CONFIG_REPOS_OVERRIDE="https://packagemanager.posit.co/cran/__linux__/noble/latest"
+
+RUN R -e "options(repos = c(CRAN = Sys.getenv('RENV_CONFIG_REPOS_OVERRIDE'))); \
     install.packages('renv'); \
     renv::restore(library = '/usr/local/lib/R/site-library', confirm = FALSE); \
     # Now explicitly install/update critical packages to ensure they are available in the system library \
