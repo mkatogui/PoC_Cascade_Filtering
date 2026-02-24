@@ -4,10 +4,21 @@
 log_event <- function(level, event, message, ...) {
   # Log level definitions
   levels <- c(debug = 1, info = 2, warn = 3, error = 4)
+  
+  # Normalize severity and handle unknown levels gracefully
+  level_name <- tolower(level)
+  if (!(level_name %in% names(levels))) {
+    level_name <- "info" # Safe default for unknown levels
+  }
+  
   current_level <- getOption("poc.log_level", "info")
+  current_level_name <- tolower(current_level)
+  if (!(current_level_name %in% names(levels))) {
+    current_level_name <- "info"
+  }
   
   # Only log if the level is high enough
-  if (levels[tolower(level)] < levels[tolower(current_level)]) {
+  if (levels[level_name] < levels[current_level_name]) {
     return(invisible(NULL))
   }
   
