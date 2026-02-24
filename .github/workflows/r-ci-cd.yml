@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, master ]
 
+env:
+  R_CLI_UNICODE: "false"
+
 jobs:
   build-image:
     runs-on: ubuntu-latest
@@ -157,7 +160,14 @@ jobs:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
           APP_NAME: ${{ secrets.APP_NAME || 'basiccascadeapp' }}
+          R_CLI_UNICODE: "false"
+          CLI_UNICODE: "false"
+          LANG: "C"
         run: |
+          # Force no unicode for all R sessions
+          options(cli.unicode = FALSE)
+          Sys.setenv(R_CLI_UNICODE = "false")
+          
           library(rsconnect)
           
           if (Sys.getenv("SHINYAPPS_NAME") == "" || 
@@ -185,7 +195,16 @@ jobs:
           )
           
           message("Deployment successful!")
-          message("App URL: ", deployment$url)
+          
+          # Safely extract URL
+          app_url <- if (is.list(deployment) && !is.null(deployment$url)) {
+            deployment$url
+          } else {
+            # Fallback: construct URL if deployment object doesn't have it
+            paste0("https://", Sys.getenv("SHINYAPPS_NAME"), ".shinyapps.io/", Sys.getenv("APP_NAME"), "/")
+          }
+          
+          message("App URL: ", app_url)
           
           # Generate GitHub Step Summary
           summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
@@ -193,7 +212,7 @@ jobs:
             cat("# Deployment Summary (Docker Recycling)\n\n", file = summary_file)
             cat(paste0("> [!TIP]\n> Image recycled: **", "${{ needs.build-image.outputs.exists == 'true' }}", "**\n\n"), file = summary_file, append = TRUE)
             cat("**Status**: Successfully deployed to shinyapps.io from container\n", file = summary_file, append = TRUE)
-            cat(paste0("App URL: [", deployment$url, "](", deployment$url, ")\n"), file = summary_file, append = TRUE)
+            cat(paste0("App URL: [", app_url, "](", app_url, ")\n"), file = summary_file, append = TRUE)
             cat(paste0("Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n"), file = summary_file, append = TRUE)
           }
         shell: Rscript {0}

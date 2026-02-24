@@ -3,7 +3,11 @@ source("renv/activate.R")
 # This file is loaded when R starts in this project
 
 # Set CRAN mirror for package installations
-options(repos = c(CRAN = "https://cloud.r-project.org"))
+options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/latest"))
+
+# Disable emojis/unicode in logs for cleaner output
+options(cli.unicode = FALSE)
+Sys.setenv(R_CLI_UNICODE = "false")
 
 # Set global warning level
 options(warn = 1)  # Print warnings as they occur but don't convert to errors
