@@ -8,6 +8,7 @@ Transforming a "Proof of Concept" (PoC) Shiny application into a production-read
 ### 1. Unified Validation Engine
 Instead of scattered logic, we centralized validation into a functional layer (`R/validation.R`).
 - **Single Source of Truth**: Unit tests source the real validation logic rather than mocking it.
+- **Explicit Parental Invariants**: We encoded the cascading ordering constraints directly into the validation functions. A "Product" is only valid if its parent "Subcategory" and "Category" are also valid, preventing structural drift between the UI state and the business logic.
 - **Strict Requirement Alignment**: Business rules (e.g., positive integers, specific date ranges) are enforced at the core, UI, and test levels simultaneously.
 
 ### 2. Deterministic Environment Control
@@ -19,6 +20,7 @@ We eliminated the "works on my machine" syndrome via a three-pronged approach:
 ### 3. Professional Observability (Structured Logging)
 In production Shiny systems, observability is a baseline requirement. We implemented a lightweight, structured logging layer (`R/logger.R`).
 - **Standardized Capture**: Logs are routed to `stderr` for automatic collection by container runtimes and CloudWatch/shinylogs.
+- **Level Control**: Built-in severity filtering (Info, Warn, Error) via a global `poc.log_level` option to manage log volume in production.
 - **Event-Driven Audit**: The application logs key events (Initializations, Reset, Validation changes, Successful Applications) with structured metadata.
 - **Emoji-Free Standard**: Forced text-only indicators (e.g., [INFO], [WARN]) to ensure 100% compatibility with all log processors.
 

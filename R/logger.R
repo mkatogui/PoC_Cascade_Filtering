@@ -2,8 +2,16 @@
 # Logs to stderr for capture by container runtimes and shinyapps.io
 
 log_event <- function(level, event, message, ...) {
+  # Log level definitions
+  levels <- c(debug = 1, info = 2, warn = 3, error = 4)
+  current_level <- getOption("poc.log_level", "info")
+  
+  # Only log if the level is high enough
+  if (levels[tolower(level)] < levels[tolower(current_level)]) {
+    return(invisible(NULL))
+  }
+  
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  # Use standard text indicators instead of symbols
   level_tag <- paste0("[", toupper(level), "]")
   
   # Construct log message

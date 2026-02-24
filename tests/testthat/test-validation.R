@@ -14,16 +14,18 @@ test_that("Category validation works", {
 
 # Subcategory validation
 test_that("Subcategory validation works", {
-  expect_true(is_valid_subcategory("Phones"))
-  expect_false(is_valid_subcategory(""))
-  expect_false(is_valid_subcategory(NULL))
+  expect_true(is_valid_subcategory("Phones", "Electronics"))
+  expect_false(is_valid_subcategory("Phones", "")) # Fails if parent category is empty
+  expect_false(is_valid_subcategory("", "Electronics"))
+  expect_false(is_valid_subcategory(NULL, "Electronics"))
 })
 
 # Product validation
 test_that("Product validation works", {
-  expect_true(is_valid_product("iPhone"))
-  expect_false(is_valid_product(""))
-  expect_false(is_valid_product(NULL))
+  expect_true(is_valid_product("iPhone", "Phones", "Electronics"))
+  expect_false(is_valid_product("iPhone", "", "Electronics")) # Fails if parent subcategory is empty
+  expect_false(is_valid_product("", "Phones", "Electronics"))
+  expect_false(is_valid_product(NULL, "Phones", "Electronics"))
 })
 
 # Quantity validation

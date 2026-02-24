@@ -4,12 +4,12 @@ is_valid_category <- function(category) {
   !is.null(category) && category != ""
 }
 
-is_valid_subcategory <- function(subcategory) {
-  !is.null(subcategory) && subcategory != ""
+is_valid_subcategory <- function(subcategory, category) {
+  !is.null(subcategory) && subcategory != "" && is_valid_category(category)
 }
 
-is_valid_product <- function(product) {
-  !is.null(product) && product != ""
+is_valid_product <- function(product, subcategory, category) {
+  !is.null(product) && product != "" && is_valid_subcategory(subcategory, category)
 }
 
 is_valid_quantity <- function(quantity) {
@@ -26,9 +26,13 @@ is_valid_order_date <- function(orderDate) {
 }
 
 all_fields_valid <- function(input) {
-  is_valid_category(input$category) &&
-    is_valid_subcategory(input$subcategory) &&
-    is_valid_product(input$product) &&
+  cat <- input$category
+  subcat <- input$subcategory
+  prod <- input$product
+  
+  is_valid_category(cat) &&
+    is_valid_subcategory(subcat, cat) &&
+    is_valid_product(prod, subcat, cat) &&
     is_valid_quantity(input$quantity) &&
     is_valid_comment(input$comment) &&
     is_valid_order_date(input$orderDate)
