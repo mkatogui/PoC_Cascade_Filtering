@@ -90,6 +90,7 @@ jobs:
     env:
       RENV_CONFIG_ACTIVATE: "FALSE"
       R_LIBS_SITE: "/usr/local/lib/R/site-library"
+      NOT_CRAN: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
