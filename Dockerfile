@@ -51,7 +51,7 @@ ENV RENV_CONFIG_REPOS_OVERRIDE="https://packagemanager.posit.co/cran/__linux__/n
 RUN Rscript -e "options(repos = c(CRAN = Sys.getenv('RENV_CONFIG_REPOS_OVERRIDE'))); \
     install.packages('renv'); \
     # Install critical tools FIRST from binaries to satisfy dependencies \
-    tools <- c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
+    tools <- c('shiny', 'shinyFeedback', 'shinyjs', 'dplyr', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
     install.packages(tools); \
     # Restore the environment, using clean = FALSE to keep our tools \
     renv::restore(confirm = FALSE, clean = FALSE); \

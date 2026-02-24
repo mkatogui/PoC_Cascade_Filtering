@@ -694,6 +694,35 @@
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
       "Repository": "CRAN"
     },
+    "dplyr": {
+      "Package": "dplyr",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Title": "A Grammar of Data Manipulation",
+      "Depends": [
+        "R (>= 4.1.0)"
+      ],
+      "Imports": [
+        "cli (>= 3.6.2)",
+        "generics",
+        "glue (>= 1.3.2)",
+        "lifecycle (>= 1.0.5)",
+        "magrittr (>= 1.5)",
+        "methods",
+        "pillar (>= 1.9.0)",
+        "R6",
+        "rlang (>= 1.1.7)",
+        "tibble (>= 3.2.0)",
+        "tidyselect (>= 1.2.0)",
+        "utils",
+        "vctrs (>= 0.7.1)"
+      ],
+      "License": "MIT + file LICENSE",
+      "URL": "https://dplyr.tidyverse.org, https://github.com/tidyverse/dplyr",
+      "BugReports": "https://github.com/tidyverse/dplyr/issues",
+      "NeedsCompilation": "yes",
+      "Repository": "CRAN"
+    },
     "evaluate": {
       "Package": "evaluate",
       "Version": "1.0.5",
@@ -851,6 +880,23 @@
       "NeedsCompilation": "no",
       "Author": "Henrik Bengtsson [aut, cre, cph], Davis Vaughan [ctb]",
       "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+      "Repository": "CRAN"
+    },
+    "generics": {
+      "Package": "generics",
+      "Version": "0.1.4",
+      "Source": "Repository",
+      "Title": "Common S3 Generics not Provided by Base R Methods Related to Model Fitting",
+      "Depends": [
+        "R (>= 3.6)"
+      ],
+      "Imports": [
+        "methods"
+      ],
+      "License": "MIT + file LICENSE",
+      "URL": "https://generics.r-lib.org, https://github.com/r-lib/generics",
+      "BugReports": "https://github.com/r-lib/generics/issues",
+      "NeedsCompilation": "no",
       "Repository": "CRAN"
     },
     "glue": {
@@ -2402,6 +2448,28 @@
       "NeedsCompilation": "yes",
       "Author": "Kirill Müller [aut, cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], Romain Francois [ctb], Jennifer Bryan [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
+      "Repository": "CRAN"
+    },
+    "tidyselect": {
+      "Package": "tidyselect",
+      "Version": "1.2.1",
+      "Source": "Repository",
+      "Title": "Select from a Set of Strings",
+      "Depends": [
+        "R (>= 3.4)"
+      ],
+      "Imports": [
+        "cli (>= 3.3.0)",
+        "glue (>= 1.3.0)",
+        "lifecycle (>= 1.0.3)",
+        "rlang (>= 1.0.4)",
+        "vctrs (>= 0.5.2)",
+        "withr"
+      ],
+      "License": "MIT + file LICENSE",
+      "URL": "https://tidyselect.r-lib.org, https://github.com/r-lib/tidyselect",
+      "BugReports": "https://github.com/r-lib/tidyselect/issues",
+      "NeedsCompilation": "yes",
       "Repository": "CRAN"
     },
     "tinytex": {
