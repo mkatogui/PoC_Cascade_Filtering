@@ -13,13 +13,19 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.image_info.outputs.image }}
+      image: ${{ steps.meta.outputs.tags }}
+      env_hash: ${{ steps.env_hash.outputs.hash }}
+      exists: ${{ steps.check_image.outputs.exists }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Generate Environment Hash
+        id: env_hash
+        run: |
+          # Create a hash of the environment definition
+          HASH=$(sha256sum renv.lock Dockerfile | sha256sum | cut -d' ' -f1)
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
       
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
@@ -28,17 +34,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Check if image exists
+        id: check_image
+        continue-on-error: true
+        run: |
+          IMAGE_TAG="ghcr.io/mkatogui/poc_cascade_filtering:env-${{ steps.env_hash.outputs.hash }}"
+          if docker manifest inspect $IMAGE_TAG > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::notice ::Environment image already exists. Recycling $IMAGE_TAG"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::notice ::Environment changed. Building new image..."
+          fi
+      
+      - name: Set up Docker Buildx
+        if: steps.check_image.outputs.exists != 'true'
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/mkatogui/poc_cascade_filtering
           tags: |
-            type=sha,format=long
-            type=ref,event=branch
-            latest
+            type=raw,value=env-${{ steps.env_hash.outputs.hash }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
       
-      - name: Build and push Docker image
+      - name: Build and push
+        if: steps.check_image.outputs.exists != 'true'
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -47,19 +70,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
-      - name: Output image tag
-        id: image_info
-        run: |
-          # GHCR requires lowercase repository names
-          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image=${IMAGE_NAME}:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
 
   test:
     needs: build-image
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/mkatogui/poc_cascade_filtering:sha-${{ github.sha }}
+      image: ghcr.io/mkatogui/poc_cascade_filtering:env-${{ needs.build-image.outputs.env_hash }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -85,7 +101,8 @@ jobs:
           # Generate GitHub Step Summary
           summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
           if (summary_file != "") {
-            cat("# 🧪 Test Results Summary (Docker)\n\n", file = summary_file)
+            cat("# 🧪 Test Results Summary (Docker Recycling)\n\n", file = summary_file)
+            cat(paste0("> [!TIP]\n> Image recycled: **", "${{ needs.build-image.outputs.exists == 'true' }}", "**\n\n"), file = summary_file, append = TRUE)
             
             # Create a summary table
             df_results <- as.data.frame(results)
@@ -116,11 +133,11 @@ jobs:
         shell: Rscript {0}
 
   deploy:
-    needs: test
+    needs: [build-image, test]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/mkatogui/poc_cascade_filtering:sha-${{ github.sha }}
+      image: ghcr.io/mkatogui/poc_cascade_filtering:env-${{ needs.build-image.outputs.env_hash }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -140,10 +157,8 @@ jobs:
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
           APP_NAME: ${{ secrets.APP_NAME || 'basiccascadeapp' }}
         run: |
-          # Use rsconnect from the container to deploy
           library(rsconnect)
           
-          # Verify we have the required secrets
           if (Sys.getenv("SHINYAPPS_NAME") == "" || 
               Sys.getenv("SHINYAPPS_TOKEN") == "" || 
               Sys.getenv("SHINYAPPS_SECRET") == "") {
@@ -154,14 +169,12 @@ jobs:
           
           message("Deploying with account: ", Sys.getenv("SHINYAPPS_NAME"))
           
-          # Configure account
           setAccountInfo(
             name = Sys.getenv("SHINYAPPS_NAME"),
             token = Sys.getenv("SHINYAPPS_TOKEN"),
             secret = Sys.getenv("SHINYAPPS_SECRET")
           )
           
-          # Deploy app
           deployment <- deployApp(
             appDir = ".",
             appName = Sys.getenv("APP_NAME"),
@@ -176,7 +189,8 @@ jobs:
           # Generate GitHub Step Summary
           summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
           if (summary_file != "") {
-            cat("# 🚀 Deployment Summary (Docker)\n\n", file = summary_file)
+            cat("# 🚀 Deployment Summary (Docker Recycling)\n\n", file = summary_file)
+            cat(paste0("> [!TIP]\n> Image recycled: **", "${{ needs.build-image.outputs.exists == 'true' }}", "**\n\n"), file = summary_file, append = TRUE)
             cat("✅ **Status**: Successfully deployed to shinyapps.io from container\n", file = summary_file, append = TRUE)
             cat(paste0("🔗 **App URL**: [", deployment$url, "](", deployment$url, ")\n"), file = summary_file, append = TRUE)
             cat(paste0("📅 **Time**: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n"), file = summary_file, append = TRUE)
