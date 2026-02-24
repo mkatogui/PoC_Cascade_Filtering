@@ -7,7 +7,7 @@ R CI/CD pipeline as a working template.
 
 ## Features
 
-- **Cascading Dropdowns:** Category → Subcategory → Product, all required.
+- **Cascading Dropdowns:** Category -> Subcategory -> Product, all required.
 - **Additional Inputs:** Quantity (positive integer), Comment (10-20 characters), Order Date (2023-01-01 to 2024-12-31).
 - **Validation:** Real-time, with field-level feedback using `shinyFeedback`.
 - **Apply Button:** Only visible when all fields are valid.

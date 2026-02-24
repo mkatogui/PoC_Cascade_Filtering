@@ -61,12 +61,12 @@ filterModuleServer <- function(id, data) {
         cat(name, ": ", current_selections[[name]], "\n", sep = "")
       }
       cat("\n--- Validation Status ---\n")
-      cat("Category: ", ifelse(is_valid_category(input$category), "✓ Valid", "✗ Invalid"), "\n")
-      cat("Subcategory: ", ifelse(is_valid_subcategory(input$subcategory), "✓ Valid", "✗ Invalid"), "\n")
-      cat("Product: ", ifelse(is_valid_product(input$product), "✓ Valid", "✗ Invalid"), "\n")
-      cat("Quantity: ", ifelse(is_valid_quantity(input$quantity), "✓ Valid", "✗ Invalid"), "\n")
-      cat("Comment: ", ifelse(is_valid_comment(input$comment), "✓ Valid", "✗ Invalid"), "\n")
-      cat("Date: ", ifelse(is_valid_order_date(input$orderDate), "✓ Valid", "✗ Invalid"), "\n")
+      cat("Category: ", ifelse(is_valid_category(input$category), "Valid", "Invalid"), "\n")
+      cat("Subcategory: ", ifelse(is_valid_subcategory(input$subcategory), "Valid", "Invalid"), "\n")
+      cat("Product: ", ifelse(is_valid_product(input$product), "Valid", "Invalid"), "\n")
+      cat("Quantity: ", ifelse(is_valid_quantity(input$quantity), "Valid", "Invalid"), "\n")
+      cat("Comment: ", ifelse(is_valid_comment(input$comment), "Valid", "Invalid"), "\n")
+      cat("Date: ", ifelse(is_valid_order_date(input$orderDate), "Valid", "Invalid"), "\n")
       if(is_valid_category(input$category)) {
         cat("\n--- Filter Results ---\n")
         filtered_data <- data

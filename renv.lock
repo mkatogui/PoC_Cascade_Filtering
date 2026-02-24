@@ -1927,12 +1927,6 @@
       "Version": "1.4.1",
       "Source": "Repository",
       "Repository": "CRAN"
-    },
-    "promises": {
-      "Package": "promises",
-      "Version": "1.5.0",
-      "Source": "Repository",
-      "Repository": "CRAN"
     }
   }
 }

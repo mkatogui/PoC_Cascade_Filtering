@@ -47,12 +47,19 @@ COPY renv/activate.R renv/activate.R
 RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); \
     install.packages('renv'); \
     renv::restore(library = '/usr/local/lib/R/site-library', confirm = FALSE); \
-    # Verify critical packages are available \
+    # Now explicitly install/update critical packages to ensure they are available in the system library \
+    # We do this AFTER restore to prevent renv from cleaning them up if they differ slightly from the lockfile \
     critical_pkgs <- c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
+    install.packages(critical_pkgs, lib = '/usr/local/lib/R/site-library'); \
+    # Final verification \
     installed <- installed.packages(lib.loc = '/usr/local/lib/R/site-library')[,'Package']; \
     missing <- setdiff(critical_pkgs, installed); \
     if (length(missing) > 0) { \
-    stop('Critical packages missing after restore: ', paste(missing, collapse = ", ")) \
+    cat('\n\nERROR: The following critical packages are missing from /usr/local/lib/R/site-library:\n'); \
+    cat(paste('  -', missing, collapse = '\n'), '\n\n'); \
+    stop('Critical packages missing after restore') \
+    } else { \
+    cat('\n\nSUCCESS: All critical packages verified in system library.\n\n'); \
     }"
 
 # Copy the rest of the app
