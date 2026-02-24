@@ -26,15 +26,8 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.5.2'
+          use-public-rspm: true
           
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.local/share/renv
-          key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-renv-
-      
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -51,30 +44,47 @@ jobs:
             libjpeg-dev
           
       - name: Restore renv environment
-        run: |
-          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
-          renv::restore()
-        shell: Rscript {0}
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 1
       
       - name: Run tests
         run: |
-          # Configure R environment
-          options(warn = 1)
-          Sys.setenv("R_TESTS" = "")
-          Sys.setenv("_R_CHECK_FORCE_SUGGESTS_" = "false")
+          # Ensure renv is active and run tests
+          library(testthat)
+          results <- test_dir("tests/testthat", reporter = "summary")
           
-          # Run tests with warnings suppressed
-          tryCatch({
-            test_results <- testthat::test_dir("tests/testthat", reporter = "summary")
-            print(test_results)
-          }, error = function(e) {
-            message("Error in tests: ", e$message)
-            # Don't fail the build for test errors
-            message("Continuing despite test errors...")
-          }, warning = function(w) {
-            message("Warning in tests: ", w$message)
-            # Continue execution despite warnings
-          })
+          # Generate GitHub Step Summary
+          summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
+          if (summary_file != "") {
+            cat("# 🧪 Test Results Summary\n\n", file = summary_file)
+            
+            # Create a summary table
+            df_results <- as.data.frame(results)
+            total <- nrow(df_results)
+            failed <- sum(df_results$failed > 0 | df_results$error > 0)
+            passed <- total - failed
+            
+            cat("| Metric | Value |\n", file = summary_file, append = TRUE)
+            cat("| :--- | :--- |\n", file = summary_file, append = TRUE)
+            cat(paste0("| **Total Test Files** | ", total, " |\n"), file = summary_file, append = TRUE)
+            cat(paste0("| **Passed** | ✅ ", passed, " |\n"), file = summary_file, append = TRUE)
+            cat(paste0("| **Failed/Error** | ", ifelse(failed > 0, paste0("❌ ", failed), "None"), " |\n\n"), file = summary_file, append = TRUE)
+            
+            if (failed > 0) {
+              cat("## ❌ Failures\n\n", file = summary_file, append = TRUE)
+              for (i in which(df_results$failed > 0 | df_results$error > 0)) {
+                cat(paste0("- **", df_results$file[i], "**: ", df_results$failed[i], " failures, ", df_results$error[i], " errors\n"), file = summary_file, append = TRUE)
+              }
+            } else {
+              cat("## ✅ All tests passed successfully!\n", file = summary_file, append = TRUE)
+            }
+          }
+          
+          # Check for failures and stop if any
+          if (!is_passed(results)) {
+            stop("Tests failed!")
+          }
         shell: Rscript {0}
 
   deploy:
@@ -97,14 +107,8 @@ jobs:
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.2.0'
-      
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-deploy-${{ hashFiles('**/DESCRIPTION') }}
-          restore-keys: ${{ runner.os }}-r-deploy-
+          r-version: '4.5.2'
+          use-public-rspm: true
       
       - name: Install system dependencies
         run: |
@@ -121,66 +125,11 @@ jobs:
             libtiff5-dev \
             libjpeg-dev
           
-      - name: Install dependencies
-        run: |
-          # Set CRAN mirror
-          options(repos = c(CRAN = "https://cloud.r-project.org"))
-          
-          # Install packages needed for deployment with detailed error handling
-          tryCatch({
-            # Enable more detailed package installation info
-            options(install.packages.check.source = "no")
-            options(install.packages.compile.from.source = "never")
-            options(warn = 2)  # Convert warnings to errors temporarily for installation
-            
-            # First, install rsconnect separately to ensure it succeeds
-            message("Installing rsconnect package...")
-            install.packages("rsconnect")
-            
-            # Check if rsconnect was installed successfully
-            if (!requireNamespace("rsconnect", quietly = TRUE)) {
-              stop("Failed to install rsconnect package")
-            }
-            
-            # Now install the rest of the packages
-            message("Installing remaining packages...")
-            install.packages(c(
-              "shiny", 
-              "shinyFeedback", 
-              "shinyjs", 
-              "tibble",
-              "dplyr",
-              "magrittr",
-              "tidyr",
-              "readr"
-            ))
-            
-            # Reset warning level
-            options(warn = 1)
-            
-            # Verify installation
-            installed_packages <- rownames(installed.packages())
-            required_packages <- c("shiny", "shinyFeedback", "shinyjs", "tibble", "rsconnect", "dplyr", "magrittr")
-            missing_packages <- setdiff(required_packages, installed_packages)
-            
-            if (length(missing_packages) > 0) {
-              stop("Failed to install: ", paste(missing_packages, collapse = ", "))
-            }
-            
-            message("All required packages installed successfully")
-            
-            # Print package versions for diagnostic purposes
-            message("Package versions:")
-            for (pkg in required_packages) {
-              message(pkg, ": ", packageVersion(pkg))
-            }
-          }, error = function(e) {
-            message("Error installing packages: ", e$message)
-            message(traceback())
-            # Exit with error
-            quit(status = 1)
-          })
-        shell: Rscript {0}
+      - name: Restore renv environment
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 1
+          extra-packages: rsconnect
         
       - name: Deploy to shinyapps.io
         env:
@@ -255,6 +204,15 @@ jobs:
             
             message("Deployment successful!")
             message("App URL: ", deployment$url)
+            
+            # Generate GitHub Step Summary
+            summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
+            if (summary_file != "") {
+              cat("# 🚀 Deployment Summary\n\n", file = summary_file)
+              cat("✅ **Status**: Successfully deployed to shinyapps.io\n", file = summary_file, append = TRUE)
+              cat(paste0("🔗 **App URL**: [", deployment$url, "](", deployment$url, ")\n"), file = summary_file, append = TRUE)
+              cat(paste0("📅 **Time**: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n"), file = summary_file, append = TRUE)
+            }
           }, error = function(e) {
             message("Deployment error: ", e$message)
             # Print the full error object for diagnosis
