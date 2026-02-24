@@ -28,7 +28,7 @@ jobs:
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
       
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -49,11 +49,11 @@ jobs:
       
       - name: Set up Docker Buildx
         if: steps.check_image.outputs.exists != 'true'
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ghcr.io/mkatogui/poc_cascade_filtering
           tags: |
@@ -62,7 +62,7 @@ jobs:
       
       - name: Build and push
         if: steps.check_image.outputs.exists != 'true'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -127,7 +127,8 @@ jobs:
           }
           
           # Check for failures and stop if any
-          if (!is_passed(results)) {
+          df_results <- as.data.frame(results)
+          if (sum(df_results$failed > 0 | df_results$error > 0) > 0) {
             stop("Tests failed!")
           }
         shell: Rscript {0}
