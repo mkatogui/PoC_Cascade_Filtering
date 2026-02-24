@@ -6,7 +6,11 @@ filterModuleUI <- function(id) {
     # Product Filter Section
     div(
       h4("Product Filters"),
-      selectInput(ns("category"), "Category *", choices = c("Select..." = "")),
+      selectInput(
+        ns("category"),
+        "Category *",
+        choices = c("Select..." = "", unique(sample_data$Category))
+      ),
       selectInput(ns("subcategory"), "Subcategory *", choices = c("Select..." = "")),
       selectInput(ns("product"), "Product *", choices = c("Select..." = ""))
     ),

@@ -25,7 +25,9 @@ test_that("Full cascading filter flow works correctly", {
     }
   )
 
-  if (is.null(app)) return()
+  if (is.null(app)) {
+    return()
+  }
   on.exit(app$stop())
 
   # 1. Open the filter modal
@@ -35,16 +37,20 @@ test_that("Full cascading filter flow works correctly", {
   # 2. Simulate cascading selections
   # Category -> Electronics
   app$set_inputs(`filterMod-category` = "Electronics")
+  app$wait_for_idle()
 
   # Subcategory -> Phones (waits for reactive update)
   app$set_inputs(`filterMod-subcategory` = "Phones")
+  app$wait_for_idle()
 
   # Product -> iPhone
   app$set_inputs(`filterMod-product` = "iPhone")
+  app$wait_for_idle()
 
   # 3. Fill validation fields with INVALID data first
   app$set_inputs(`filterMod-quantity` = 5)
   app$set_inputs(`filterMod-comment` = "Too short") # 9 chars (Invalid, < 10)
+  app$wait_for_idle()
 
   # 4. Verify that Apply button is VISIBLE but DISABLED
   is_apply_visible <- app$get_js("$('#apply').css('display') !== 'none'")
@@ -54,6 +60,7 @@ test_that("Full cascading filter flow works correctly", {
 
   # 5. Fill validation fields to enable Apply
   app$set_inputs(`filterMod-comment` = "Valid length comment") # 20 chars (Valid)
+  app$wait_for_idle()
 
   # Verify enabled
   app$wait_for_js("$('#apply').prop('disabled') === false")
@@ -73,8 +80,10 @@ test_that("Full cascading filter flow works correctly", {
   app$click("showModal")
   app$wait_for_js("$('.modal').length > 0")
   app$set_inputs(`filterMod-category` = "Clothing")
+  app$wait_for_idle()
   app$wait_for_js("$('#apply').prop('disabled') === true")
   app$click("reset") # Test reset logic
+  app$wait_for_idle()
 
   # Cleanup
   app$click(selector = ".modal .btn-secondary", click_js = TRUE) # Cancel/Close

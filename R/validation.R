@@ -74,20 +74,20 @@ is_valid_order_date <- function(orderDate) {
 
 all_fields_valid <- function(input) {
   # Defensive reading from input
-  cat <- tryCatch(input$category, error = function(e) NULL)
-  subcat <- tryCatch(input$subcategory, error = function(e) NULL)
-  prod <- tryCatch(input$product, error = function(e) NULL)
-  qty <- tryCatch(input$quantity, error = function(e) NULL)
-  cmt <- tryCatch(input$comment, error = function(e) NULL)
-  dt <- tryCatch(input$orderDate, error = function(e) NULL)
+  category_val <- tryCatch(input$category, error = function(e) NULL)
+  subcategory_val <- tryCatch(input$subcategory, error = function(e) NULL)
+  product_val <- tryCatch(input$product, error = function(e) NULL)
+  quantity_val <- tryCatch(input$quantity, error = function(e) NULL)
+  comment_val <- tryCatch(input$comment, error = function(e) NULL)
+  order_date_val <- tryCatch(input$orderDate, error = function(e) NULL)
 
   # Ensure scalar TRUE/FALSE
-  valid <- is_valid_category(cat) &&
-    is_valid_subcategory(subcat, cat) &&
-    is_valid_product(prod, subcat, cat) &&
-    is_valid_quantity(qty) &&
-    is_valid_comment(cmt) &&
-    is_valid_order_date(dt)
+  valid <- is_valid_category(category_val) &&
+    is_valid_subcategory(subcategory_val, category_val) &&
+    is_valid_product(product_val, subcategory_val, category_val) &&
+    is_valid_quantity(quantity_val) &&
+    is_valid_comment(comment_val) &&
+    is_valid_order_date(order_date_val)
 
   isTRUE(valid)
 }

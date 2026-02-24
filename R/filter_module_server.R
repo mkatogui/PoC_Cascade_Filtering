@@ -5,12 +5,6 @@ filterModuleServer <- function(id, data) {
 
     # --- Cascading Logic ---
 
-    # Initialize category choices ONCE (Point 6)
-    # Don't use observe() here as it would reset selection on every flush
-    updateSelectInput(session, "category",
-      choices = c("Select..." = "", unique(data$Category))
-    )
-
     observeEvent(input$category, {
       if (input$category != "") {
         subcats <- data %>%
@@ -71,11 +65,27 @@ filterModuleServer <- function(id, data) {
 
     output$modalSelection <- renderPrint({
       current_selections <- list(
-        Category = if (is_valid_category(input$category)) input$category else "None",
-        Subcategory = if (is_valid_subcategory(input$subcategory, input$category)) input$subcategory else "None",
-        Product = if (is_valid_product(input$product, input$subcategory, input$category)) input$product else "None",
+        Category = if (is_valid_category(input$category)) {
+          input$category
+        } else {
+          "None"
+        },
+        Subcategory = if (is_valid_subcategory(input$subcategory, input$category)) {
+          input$subcategory
+        } else {
+          "None"
+        },
+        Product = if (is_valid_product(input$product, input$subcategory, input$category)) {
+          input$product
+        } else {
+          "None"
+        },
         Quantity = input$quantity,
-        Comment = if (nzchar(input$comment)) input$comment else "None",
+        Comment = if (nzchar(input$comment)) {
+          input$comment
+        } else {
+          "None"
+        },
         "Order Date" = format(input$orderDate, "%Y-%m-%d")
       )
 

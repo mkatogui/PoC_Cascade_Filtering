@@ -1,22 +1,20 @@
-# Load required packages
-library(tibble)
+# Sample data for PoC Cascade Filtering App
+# Generated dynamically to demonstrate cascading relationships
 
-# Create sample data
-create_sample_data <- function() {
-  tibble(
-    Category = rep(c("Electronics", "Clothing", "Food"), each = 5),
-    Subcategory = c(
-      "Phones", "Computers", "Computers", "TVs", "Cameras", # Electronics
-      "Shirts", "Shirts", "Pants", "Pants", "Accessories", # Clothing
-      "Fruits", "Fruits", "Vegetables", "Dairy", "Snacks" # Food
-    ),
-    Product = c(
-      "iPhone", "Laptop", "Desktop", "Smart TV", "DSLR Camera",
-      "T-Shirt", "Button-up", "Jeans", "Khakis", "Watch",
-      "Apple", "Orange", "Carrot", "Milk", "Chips"
-    )
-  )
-}
+sample_data <- tibble::tribble(
+  ~Category,     ~Subcategory,    ~Product,
+  "Electronics", "Phones",        "iPhone",
+  "Electronics", "Phones",        "Samsung Galaxy",
+  "Electronics", "Laptops",       "MacBook Pro",
+  "Electronics", "Laptops",       "Dell XPS",
+  "Clothing",    "Men's",         "T-Shirt",
+  "Clothing",    "Men's",         "Jeans",
+  "Clothing",    "Women's",       "Dress",
+  "Clothing",    "Women's",       "Skirt",
+  "Home",        "Living Room",   "Sofa",
+  "Home",        "Living Room",   "Coffee Table",
+  "Home",        "Kitchen",       "Toaster",
+  "Home",        "Kitchen",       "Blender"
+)
 
-# Load sample data
-sample_data <- create_sample_data()
+log_info("DATA_LOADED", "Sample data loaded successfully", rows = nrow(sample_data))

@@ -92,7 +92,11 @@ app_server <- function(input, output, session) {
   output$selection <- renderPrint({
     # Helper to clean display
     get_val <- function(x) {
-      if (is.null(x) || (is.character(x) && !nzchar(x))) "None" else x
+      if (is.null(x) || (is.character(x) && !nzchar(x))) {
+        "None"
+      } else {
+        x
+      }
     }
 
     selections <- list(
@@ -101,7 +105,11 @@ app_server <- function(input, output, session) {
       Product = get_val(selected$product),
       Quantity = get_val(selected$quantity),
       Comment = get_val(selected$comment),
-      "Order Date" = if (!is.null(selected$orderDate)) format(selected$orderDate, "%Y-%m-%d") else "None"
+      "Order Date" = if (!is.null(selected$orderDate)) {
+        format(selected$orderDate, "%Y-%m-%d")
+      } else {
+        "None"
+      }
     )
 
     for (name in names(selections)) {

@@ -7,11 +7,15 @@ log_event <- function(level, event, message, ...) {
 
   # Normalize severity
   level_name <- tolower(level)
-  if (!(level_name %in% names(levels))) level_name <- "info"
+  if (!(level_name %in% names(levels))) {
+    level_name <- "info"
+  }
 
   current_level <- getOption("poc.log_level", "info")
   current_level_name <- tolower(current_level)
-  if (!(current_level_name %in% names(levels))) current_level_name <- "info"
+  if (!(current_level_name %in% names(levels))) {
+    current_level_name <- "info"
+  }
 
   # Severity filter
   if (levels[level_name] < levels[current_level_name]) {
@@ -31,7 +35,15 @@ log_event <- function(level, event, message, ...) {
 }
 
 # Logger Sugars
-log_debug <- function(event, message, ...) log_event("debug", event, message, ...)
-log_info <- function(event, message, ...) log_event("info", event, message, ...)
-log_warn <- function(event, message, ...) log_event("warn", event, message, ...)
-log_error <- function(event, message, ...) log_event("error", event, message, ...)
+log_debug <- function(event, message, ...) {
+  log_event("debug", event, message, ...)
+}
+log_info <- function(event, message, ...) {
+  log_event("info", event, message, ...)
+}
+log_warn <- function(event, message, ...) {
+  log_event("warn", event, message, ...)
+}
+log_error <- function(event, message, ...) {
+  log_event("error", event, message, ...)
+}
