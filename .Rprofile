@@ -1,4 +1,4 @@
-# source("renv/activate.R")
+source("renv/activate.R")
 # Project-wide .Rprofile for handling compiler warnings in the BasicCascadeApp
 # This file is loaded when R starts in this project
 

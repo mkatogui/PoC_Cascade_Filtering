@@ -44,18 +44,20 @@ COPY renv/activate.R renv/activate.R
 
 # Restore dependencies from renv.lock to System Library
 # Using Noble (Ubuntu 24.04) binary repository for speed
+ENV R_LIBS_SITE="/usr/local/lib/R/site-library"
 ENV RENV_PATHS_LIBRARY="/usr/local/lib/R/site-library"
 ENV RENV_CONFIG_REPOS_OVERRIDE="https://packagemanager.posit.co/cran/__linux__/noble/latest"
 
 RUN Rscript -e "options(repos = c(CRAN = Sys.getenv('RENV_CONFIG_REPOS_OVERRIDE'))); \
     install.packages('renv'); \
-    # Restore the environment \
-    renv::restore(confirm = FALSE); \
-    # Ensure critical tools are present in the system library \
+    # Install critical tools FIRST from binaries to satisfy dependencies \
     tools <- c('shiny', 'shinyFeedback', 'shinyjs', 'testthat', 'rsconnect', 'PKI', 'shinytest2'); \
     install.packages(tools); \
-    # Verification \
-    missing <- setdiff(tools, installed.packages()[,'Package']); \
+    # Restore the environment, using clean = FALSE to keep our tools \
+    renv::restore(confirm = FALSE, clean = FALSE); \
+    # Final check \
+    installed <- installed.packages()[,'Package']; \
+    missing <- setdiff(tools, installed); \
     if (length(missing) > 0) { \
     message('FAILED: Missing packages: ', paste(missing, collapse = ', ')); \
     quit(status = 1); \
