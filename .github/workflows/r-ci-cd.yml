@@ -7,57 +7,79 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
+  build-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image_info.outputs.image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=ref,event=branch
+            latest
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Output image tag
+        id: image_info
+        run: echo "image=ghcr.io/${{ github.repository }}:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  test:
+    needs: build-image
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      RENV_CONFIG_ACTIVATE: "FALSE"
+      R_LIBS_USER: ""
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch all history for proper Git operations
-          persist-credentials: true  # Keep credentials for Git operations
-      
-      - name: Set up Git configuration
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-      
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.5.2'
-          use-public-rspm: true
-          
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev \
-            libfontconfig1-dev \
-            libharfbuzz-dev \
-            libfribidi-dev \
-            libfreetype6-dev \
-            libpng-dev \
-            libtiff5-dev \
-            libjpeg-dev
-          
-      - name: Restore renv environment
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          cache-version: 1
+          fetch-depth: 0
       
       - name: Run tests
         run: |
-          # Ensure renv is active and run tests
+          # The environment is already correctly set up in the container system library
+          # We disable renv activation to ensure system libraries are used
           library(testthat)
           results <- test_dir("tests/testthat", reporter = "summary")
           
           # Generate GitHub Step Summary
           summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
           if (summary_file != "") {
-            cat("# 🧪 Test Results Summary\n\n", file = summary_file)
+            cat("# 🧪 Test Results Summary (Docker)\n\n", file = summary_file)
             
             # Create a summary table
             df_results <- as.data.frame(results)
@@ -77,7 +99,7 @@ jobs:
                 cat(paste0("- **", df_results$file[i], "**: ", df_results$failed[i], " failures, ", df_results$error[i], " errors\n"), file = summary_file, append = TRUE)
               }
             } else {
-              cat("## ✅ All tests passed successfully!\n", file = summary_file, append = TRUE)
+              cat("## ✅ All tests passed successfully in container!\n", file = summary_file, append = TRUE)
             }
           }
           
@@ -91,46 +113,20 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      RENV_CONFIG_ACTIVATE: "FALSE"
+      R_LIBS_USER: ""
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch all history for proper Git operations
-          persist-credentials: true  # Keep credentials for Git operations
+          fetch-depth: 0
       
-      - name: Set up Git configuration
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-      
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.5.2'
-          use-public-rspm: true
-      
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev \
-            libfontconfig1-dev \
-            libharfbuzz-dev \
-            libfribidi-dev \
-            libfreetype6-dev \
-            libpng-dev \
-            libtiff5-dev \
-            libjpeg-dev
-          
-      - name: Restore renv environment
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          cache-version: 1
-          extra-packages: rsconnect
-        
       - name: Deploy to shinyapps.io
         env:
           SHINYAPPS_NAME: ${{ secrets.SHINYAPPS_NAME }}
@@ -138,103 +134,45 @@ jobs:
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
           APP_NAME: ${{ secrets.APP_NAME || 'basiccascadeapp' }}
         run: |
-          # Set CRAN mirror and configure options
-          options(repos = c(CRAN = "https://cloud.r-project.org"))
-          options(warn = 1)  # Print warnings but don't stop
+          # Use rsconnect from the container to deploy
+          library(rsconnect)
           
           # Verify we have the required secrets
           if (Sys.getenv("SHINYAPPS_NAME") == "" || 
               Sys.getenv("SHINYAPPS_TOKEN") == "" || 
               Sys.getenv("SHINYAPPS_SECRET") == "") {
             message("WARNING: Missing one or more shinyapps.io credentials")
-            message("SHINYAPPS_NAME: ", ifelse(Sys.getenv("SHINYAPPS_NAME") == "", "MISSING", "OK"))
-            message("SHINYAPPS_TOKEN: ", ifelse(Sys.getenv("SHINYAPPS_TOKEN") == "", "MISSING", "OK"))
-            message("SHINYAPPS_SECRET: ", ifelse(Sys.getenv("SHINYAPPS_SECRET") == "", "MISSING", "OK"))
             message("Skipping deployment...")
-            # Exit successfully to not fail the build
             quit(save = "no", status = 0)
           }
           
           message("Deploying with account: ", Sys.getenv("SHINYAPPS_NAME"))
-          message("App name: ", Sys.getenv("APP_NAME"))
           
-          # Validate app structure
-          if (!file.exists("app.R")) {
-            stop("app.R file not found in workspace root")
+          # Configure account
+          setAccountInfo(
+            name = Sys.getenv("SHINYAPPS_NAME"),
+            token = Sys.getenv("SHINYAPPS_TOKEN"),
+            secret = Sys.getenv("SHINYAPPS_SECRET")
+          )
+          
+          # Deploy app
+          deployment <- deployApp(
+            appDir = ".",
+            appName = Sys.getenv("APP_NAME"),
+            forceUpdate = TRUE,
+            launch.browser = FALSE,
+            logLevel = "verbose"
+          )
+          
+          message("Deployment successful!")
+          message("App URL: ", deployment$url)
+          
+          # Generate GitHub Step Summary
+          summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
+          if (summary_file != "") {
+            cat("# 🚀 Deployment Summary (Docker)\n\n", file = summary_file)
+            cat("✅ **Status**: Successfully deployed to shinyapps.io from container\n", file = summary_file, append = TRUE)
+            cat(paste0("🔗 **App URL**: [", deployment$url, "](", deployment$url, ")\n"), file = summary_file, append = TRUE)
+            cat(paste0("📅 **Time**: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n"), file = summary_file, append = TRUE)
           }
-          
-          if (!dir.exists("R")) {
-            stop("R directory not found in workspace root")
-          }
-          
-          # List files we're going to deploy
-          app_files <- c("app.R", list.files("R/", full.names = TRUE, recursive = TRUE))
-          message("Files to deploy (", length(app_files), " total): ")
-          message(paste(app_files, collapse = "\n"))
-          message("\n")
-          
-          # Deploy with detailed error handling
-          tryCatch({
-            # Set CRAN mirror again to be sure
-            options(repos = c(CRAN = "https://cloud.r-project.org"))
-            
-            # Provide more details about the deployment process
-            message("1. Setting rsconnect account info...")
-            rsconnect::setAccountInfo(
-              name = Sys.getenv("SHINYAPPS_NAME"),
-              token = Sys.getenv("SHINYAPPS_TOKEN"),
-              secret = Sys.getenv("SHINYAPPS_SECRET")
-            )
-            
-            # Verify account info was set correctly
-            acct_info <- rsconnect::accounts()
-            message("Account configured: ", !is.null(acct_info) && nrow(acct_info) > 0)
-            
-            # Deploy app with added diagnostics
-            message("2. Starting deployment...")
-            deployment <- rsconnect::deployApp(
-              appDir = ".",
-              appName = Sys.getenv("APP_NAME"),
-              appFiles = c("app.R", "launch.R", "R/"),  # Include the new launch.R file
-              appPrimaryDoc = "launch.R",  # Use the enhanced launcher as primary doc
-              forceUpdate = TRUE,  # Force update of existing app
-              launch.browser = FALSE,
-              logLevel = "verbose"
-            )
-            
-            message("Deployment successful!")
-            message("App URL: ", deployment$url)
-            
-            # Generate GitHub Step Summary
-            summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
-            if (summary_file != "") {
-              cat("# 🚀 Deployment Summary\n\n", file = summary_file)
-              cat("✅ **Status**: Successfully deployed to shinyapps.io\n", file = summary_file, append = TRUE)
-              cat(paste0("🔗 **App URL**: [", deployment$url, "](", deployment$url, ")\n"), file = summary_file, append = TRUE)
-              cat(paste0("📅 **Time**: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n"), file = summary_file, append = TRUE)
-            }
-          }, error = function(e) {
-            message("Deployment error: ", e$message)
-            # Print the full error object for diagnosis
-            print(e)
-            message("Trace:")
-            traceback()
-            # Try a fallback deployment approach
-            message("Attempting fallback deployment approach...")
-            tryCatch({
-              rsconnect::deployApp(
-                appDir = ".",
-                appName = Sys.getenv("APP_NAME"),
-                appPrimaryDoc = "app.R",
-                forceUpdate = TRUE,  # Force update of existing app
-                launch.browser = FALSE,
-                logLevel = "verbose"
-              )
-              message("Fallback deployment successful!")
-            }, error = function(e2) {
-              message("Fallback deployment also failed: ", e2$message)
-              # Exit with a failure status to indicate deployment error
-              quit(save = "no", status = 1)
-            })
-          })
         shell: Rscript {0}
