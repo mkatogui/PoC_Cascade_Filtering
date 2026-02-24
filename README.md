@@ -8,7 +8,7 @@ R CI/CD pipeline as a working template.
 ## Features
 
 - **Cascading Dropdowns:** Category -> Subcategory -> Product, all required.
-- **Additional Inputs:** Quantity (positive integer), Comment (10-20 characters), Order Date (2023-01-01 to 2024-12-31).
+- **Additional Inputs:** Quantity (positive integer), Comment (10-20 characters), Order Date (2023-01-01 to 2026-12-31).
 - **Validation:** Real-time, with field-level feedback using `shinyFeedback`.
 - **Apply Button:** Only visible when all fields are valid.
 - **Reset Button:** Resets all modal fields.
@@ -74,7 +74,7 @@ BasicCascadeApp/
 - **Category, Subcategory, Product:** Required, must be selected in order.
 - **Quantity:** Must be a positive integer.
 - **Comment:** 10-20 characters.
-- **Order Date:** Between 2023-01-01 and 2024-12-31.
+- **Order Date:** Between 2023-01-01 and 2026-12-31.
 
 ---
 
@@ -150,11 +150,8 @@ See the workflow file in `.github/workflows/r-ci-cd.yml` for details.
 
 ### Deployment Configuration
 
-This app uses a multi-tiered deployment approach:
-
 1. **Standard deployment** via `app.R` - The primary entry point
-2. **Enhanced deployment** via `deploy-app.R` - Includes more robust dependency handling
-3. **Configuration-based deployment** via `shinyapps.yml` - Specifies dependencies and runtime options
+2. **Configuration-based deployment** via `shinyapps.yml` - Specifies dependencies and runtime options
 
 The CI/CD pipeline intelligently selects the best deployment method based on the environment.
 

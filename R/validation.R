@@ -13,7 +13,7 @@ is_valid_product <- function(product) {
 }
 
 is_valid_quantity <- function(quantity) {
-  !is.null(quantity) && !is.na(quantity) && quantity > 0
+  !is.null(quantity) && !is.na(quantity) && quantity > 0 && quantity %% 1 == 0
 }
 
 is_valid_comment <- function(comment) {
@@ -22,7 +22,7 @@ is_valid_comment <- function(comment) {
 
 is_valid_order_date <- function(orderDate) {
   !is.null(orderDate) && !is.na(orderDate) &&
-    orderDate >= as.Date("2023-01-01") && orderDate <= as.Date("2024-12-31")
+    orderDate >= as.Date("2023-01-01") && orderDate <= as.Date("2026-12-31")
 }
 
 all_fields_valid <- function(input) {

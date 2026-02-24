@@ -38,7 +38,7 @@ filterModuleServer <- function(id, data) {
       updateSelectInput(session, "product", choices = c("Select..." = ""))
       updateNumericInput(session, "quantity", value = 1)
       updateTextInput(session, "comment", value = "")
-      updateDateInput(session, "orderDate", value = Sys.Date())
+      updateDateInput(session, "orderDate", value = as.Date("2024-01-01"))
     }
     observe({
       shinyFeedback::feedbackDanger("category", !is_valid_category(input$category), "Required")

@@ -1,41 +1,9 @@
 # Unit tests for validation functions
 library(testthat)
 
-# Load validation functions directly for testing
-# Define validation functions inline to avoid file path issues
-is_valid_category <- function(category) {
-  !is.null(category) && category != ""
-}
-
-is_valid_subcategory <- function(subcategory) {
-  !is.null(subcategory) && subcategory != ""
-}
-
-is_valid_product <- function(product) {
-  !is.null(product) && product != ""
-}
-
-is_valid_quantity <- function(quantity) {
-  !is.null(quantity) && !is.na(quantity) && quantity > 0
-}
-
-is_valid_comment <- function(comment) {
-  !is.null(comment) && nchar(comment) >= 10 && nchar(comment) <= 20
-}
-
-is_valid_order_date <- function(orderDate) {
-  !is.null(orderDate) && !is.na(orderDate) &&
-    orderDate >= as.Date("2023-01-01") && orderDate <= as.Date("2024-12-31")
-}
-
-all_fields_valid <- function(input) {
-  is_valid_category(input$category) &&
-    is_valid_subcategory(input$subcategory) &&
-    is_valid_product(input$product) &&
-    is_valid_quantity(input$quantity) &&
-    is_valid_comment(input$comment) &&
-    is_valid_order_date(input$orderDate)
-}
+# Load validation functions from the source file
+# Using a relative path that works when running from the project root
+source(file.path("..", "..", "R", "validation.R"))
 
 # Category validation
 test_that("Category validation works", {
@@ -62,6 +30,7 @@ test_that("Product validation works", {
 test_that("Quantity validation works", {
   expect_true(is_valid_quantity(1))
   expect_true(is_valid_quantity(10))
+  expect_false(is_valid_quantity(1.5)) # Must be integer
   expect_false(is_valid_quantity(0))
   expect_false(is_valid_quantity(-1))
   expect_false(is_valid_quantity(NA))
@@ -80,8 +49,9 @@ test_that("is_valid_comment works", {
 test_that("is_valid_order_date works", {
   expect_true(is_valid_order_date(as.Date("2023-01-01")))
   expect_true(is_valid_order_date(as.Date("2024-12-31")))
+  expect_true(is_valid_order_date(as.Date("2026-02-24"))) # Current year
   expect_false(is_valid_order_date(as.Date("2022-12-31")))
-  expect_false(is_valid_order_date(as.Date("2025-01-01")))
+  expect_false(is_valid_order_date(as.Date("2027-01-01")))
   expect_false(is_valid_order_date(NA))
 })
 

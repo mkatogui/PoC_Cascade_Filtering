@@ -1,6 +1,6 @@
 # Production Dockerfile for PoC Cascade Filtering App
-# Based on Rocker project (standard for R Docker images)
-FROM rocker/r-ver:4.5.2
+# Using Rocker 4.4.2 which is based on Ubuntu 24.04 (Noble)
+FROM rocker/r-ver:4.4.2
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
