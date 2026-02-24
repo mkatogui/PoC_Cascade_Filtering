@@ -3,48 +3,64 @@ library(testthat)
 library(shiny)
 library(shinytest2)
 
-test_that("Filter module functions correctly", {
+test_that("Full cascading filter flow works correctly", {
   # Skip test if shinytest2 isn't available
   skip_if_not_installed("shinytest2")
   
-  # Get the absolute path to the app directory (project root)
-  # When running via test_dir("tests/testthat"), getwd() is the project root
+  # Get absolute path to the app directory
   app_dir <- getwd()
-  
-  # Make sure app.R exists in the directory
   app_file <- file.path(app_dir, "app.R")
   if (!file.exists(app_file)) {
-    # Try one level up if we are inside tests/testthat already
     app_dir <- normalizePath("../..")
-    app_file <- file.path(app_dir, "app.R")
   }
   
-  if (!file.exists(app_file)) {
-    skip(paste("app.R not found at:", app_dir))
-  }
-  
-  # Use tryCatch to provide more informative error messages
+  # Start the app
   app <- tryCatch({
-    # Forces headless mode for CI stability
     AppDriver$new(app_dir, name = "BasicCascadeApp", timeout = 20000, variant = NULL)
   }, error = function(e) {
     skip(paste("Failed to load app:", e$message))
     NULL
   })
   
-  # If app failed to load, the test has already been skipped
   if (is.null(app)) return()
-  
-  # Test basic app loading
-  expect_true(inherits(app, "AppDriver"), "App should load successfully")
-  
-  # Click "Open Filter" button
+  on.exit(app$stop())
+
+  # 1. Open the filter modal
   app$click("showModal")
+  app$wait_for_js("$('.modal').length > 0")
   
-  # Check that the modal opens by verifying a modal element is present
-  result <- app$get_js("$('.modal').length > 0")
-  expect_true(result, "Filter modal should open")
+  # 2. Simulate cascading selections
+  # Category -> Electronics
+  app$set_inputs(`filterMod-category` = "Electronics")
   
-  # Stop the app
-  app$stop()
+  # Subcategory -> Phones (waits for reactive update)
+  app$set_inputs(`filterMod-subcategory` = "Phones")
+  
+  # Product -> iPhone
+  app$set_inputs(`filterMod-product` = "iPhone")
+  
+  # 3. Fill validation fields
+  app$set_inputs(`filterMod-quantity` = 5)
+  app$set_inputs(`filterMod-comment` = "Validation passes here") # > 10 chars
+  
+  # 4. Verify that Apply button is now visible (as validation should pass)
+  # In server.R, the apply button is conditionally shown via shinyjs::hidden(actionButton("apply", ...))
+  # We check the display property
+  is_apply_visible <- app$get_js("$('#apply').css('display') !== 'none'")
+  expect_true(is_apply_visible, "Apply button should be visible when fields are valid")
+  
+  # 5. Apply the filter
+  app$click("apply")
+  app$wait_for_js("$('.modal').length === 0") # Wait for modal to close
+  
+  # 6. Verify main UI output
+  # The output$selection displays the summary
+  final_text <- app$get_text("#selection")
+  
+  expect_match(final_text, "Category : Electronics")
+  expect_match(final_text, "Subcategory : Phones")
+  expect_match(final_text, "Product : iPhone")
+  expect_match(final_text, "Quantity : 5")
+  expect_match(final_text, "Comment : Validation passes here")
+  expect_match(final_text, "✓ Valid", all = FALSE) # Check that some validation marks appear
 })
