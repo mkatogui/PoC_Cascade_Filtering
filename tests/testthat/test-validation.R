@@ -1,5 +1,6 @@
 # Unit tests for validation logic
 library(testthat)
+# Dependencies are loaded via helper-sourcing.R -> init.R
 
 test_that("is_valid_category handles edge cases correctly", {
   expect_true(is_valid_category("Electronics"))
