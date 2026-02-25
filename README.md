@@ -22,7 +22,6 @@ This project serves as a production-ready R CI/CD template.
 - **Live Application:** [Visit the App](https://mkatogui.shinyapps.io/basiccascadeapp/)
 - **Topics:** `shiny`, `r`, `production-ready`, `ci-cd`, `docker`, `renv`, `validation`, `modular-design`
 - **Case Study:** [Production-Grade Shiny Engineering](https://github.com/mkatogui/PoC_Cascade_Filtering/blob/main/docs/PRODUCTION_CASE_STUDY.md)
-- **Case Study (Technical):** [Production-Grade Shiny Engineering](https://github.com/mkatogui/PoC_Cascade_Filtering/blob/main/docs/PRODUCTION_CASE_STUDY.md)
 - **Deep Dive (Engineering):** [Engineering Case Study](https://github.com/mkatogui/PoC_Cascade_Filtering/blob/main/docs/ENGINEERING_CASE_STUDY.md)
 
 ---
